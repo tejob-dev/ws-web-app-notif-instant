@@ -1,0 +1,267 @@
+# ===========================================
+# NOTIFICATIONS INSTANTANÉES - .gitignore
+# ===========================================
+
+# Dependencies
+node_modules/
+backend/node_modules/
+NotificationApp/node_modules/
+
+# Production builds
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+backend/.env.local
+NotificationApp/.env
+NotificationApp/.env.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/notifications.db
+backend/notifications.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+backend/logs/
+.pm2/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# PM2 logs
+.pm2/
+
+# ===========================================
+# EXPO / REACT NATIVE
+# ===========================================
+
+# Expo
+.expo/
+.expo-shared/
+NotificationApp/.expo/
+NotificationApp/.expo-shared/
+
+# React Native
+NotificationApp/android/app/build/
+NotificationApp/android/build/
+NotificationApp/android/.gradle/
+NotificationApp/android/gradle/
+NotificationApp/android/gradlew
+NotificationApp/android/gradlew.bat
+NotificationApp/android/local.properties
+NotificationApp/android/app/release/
+
+# iOS
+NotificationApp/ios/build/
+NotificationApp/ios/Pods/
+NotificationApp/ios/*.xcworkspace
+NotificationApp/ios/*.xcuserdata
+NotificationApp/ios/DerivedData/
+
+# Metro
+NotificationApp/metro.config.js.bak
+NotificationApp/.metro-health-check*
+
+# Flipper
+NotificationApp/.flipper/
+
+# ===========================================
+# FIREBASE / GOOGLE SERVICES
+# ===========================================
+
+# Firebase configuration files (sensitive)
+backend/firebase-service-account.json
+backend/google-services.json
+NotificationApp/android/app/google-services.json
+NotificationApp/ios/GoogleService-Info.plist
+
+# Firebase cache
+.firebase/
+.firebaserc
+
+# ===========================================
+# DEVELOPMENT TOOLS
+# ===========================================
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===========================================
+# SECURITY & KEYS
+# ===========================================
+
+# API Keys and secrets
+*.key
+*.pem
+*.p12
+*.keystore
+*.jks
+
+# Environment files with sensitive data
+.env.production
+.env.staging
+.env.secret
+
+# ===========================================
+# TESTING
+# ===========================================
+
+# Test coverage
+coverage/
+.nyc_output/
+test-results/
+junit.xml
+
+# Jest
+.jest/
+
+# ===========================================
+# DEPLOYMENT
+# ===========================================
+
+# Build artifacts
+build/
+dist/
+out/
+
+# Deployment configs
+.vercel/
+.netlify/
+.firebase/
+
+# ===========================================
+# MISC
+# ===========================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Local development
+.local/
+local/
