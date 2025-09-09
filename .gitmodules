@@ -1,0 +1,3 @@
+[submodule "NotificationApp"]
+	path = NotificationApp
+	url = https://github.com/tejob-dev/ws-web-app-notif-instant.git
