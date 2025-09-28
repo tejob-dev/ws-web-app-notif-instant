@@ -13,7 +13,8 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: [
-      "http://localhost:3000", 
+      "http://localhost:3000",
+      "http://localhost:5020",
       "http://192.168.1.71:3001", 
       "http://localhost:3001",
       "http://192.168.1.71:3000",

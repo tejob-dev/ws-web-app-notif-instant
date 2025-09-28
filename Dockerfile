@@ -16,6 +16,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# S'assurer que le dossier public existe
+RUN mkdir -p public && echo "<!-- Public directory -->" > public/.gitkeep
+
 # Variables d'environnement pour la production
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
@@ -33,15 +36,15 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+# Créer les dossiers nécessaires
+RUN mkdir -p .next public
 
-# Définir automatiquement les permissions de sortie en fonction de l'utilisateur nextjs
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Copier automatiquement les fichiers de sortie pour optimiser le cache
+# Copier les fichiers de build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copier le dossier public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 

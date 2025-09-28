@@ -1,0 +1,17 @@
+# Configuration pour le développement local
+# Ce fichier override docker-compose.yml pour le développement
+services:
+  frontend:
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3001
+    ports:
+      - "3000:3000"  # Port local pour le développement
+  
+  backend:
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+    ports:
+      - "3001:3001"  # Port local pour le développement

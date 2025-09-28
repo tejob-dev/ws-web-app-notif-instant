@@ -5,8 +5,8 @@ const nextConfig = {
   
   // Configuration pour les variables d'environnement
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://69.197.142.189:5022',//'http://localhost:5022',
+    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://69.197.142.189:5022',//'ws://localhost:5022',
   },
   
   // Configuration pour les images

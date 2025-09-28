@@ -16,10 +16,11 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isConnected, setIsConnected] = useState(false)
+  const apiUrl = "http://69.197.142.189:5022"//"http://localhost:5022"//process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
   useEffect(() => {
 
     // Connexion WebSocket
-    const newSocket = io('http://localhost:3001')
+    const newSocket = io(apiUrl) //http://localhost:3001
     setSocket(newSocket)
 
     newSocket.on('connect', () => {
@@ -46,7 +47,7 @@ export default function Home() {
     if (!newMessage.trim()) return
 
     try {
-      await axios.post('http://localhost:3001/api/send-message', {
+      await axios.post(apiUrl + '/api/send-message', {
         content: newMessage,
         type: 'info'
       })
