@@ -13,5 +13,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - DB_PATH=/app/data/notifications.db
     ports:
       - "5022:3001"  # Port production

@@ -95,7 +95,14 @@ try {
 }
 
 // Base de données SQLite
-const db = new sqlite3.Database('./notifications.db');
+const dbPath = process.env.DB_PATH || './notifications.db';
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ Erreur lors de l\'ouverture de la base de données:', err.message);
+  } else {
+    console.log('✅ Base de données SQLite connectée avec succès');
+  }
+});
 
 // Créer les tables
 db.serialize(() => {

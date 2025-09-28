@@ -19,9 +19,9 @@ RUN adduser -S nodejs -u 1001
 
 # Créer les répertoires nécessaires avec les bonnes permissions
 RUN mkdir -p /app/data && \
-    touch /app/notifications.db && \
-    chmod 664 /app/notifications.db && \
+    touch /app/data/notifications.db && \
     chmod 755 /app/data && \
+    chmod 664 /app/data/notifications.db && \
     chown -R nodejs:nodejs /app
 
 # Exposer le port 3001
