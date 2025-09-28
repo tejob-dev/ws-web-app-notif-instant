@@ -12,12 +12,23 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    origin: [
+      "http://localhost:3000", 
+      "http://192.168.1.71:3001", 
+      "http://localhost:3001",
+      "http://192.168.1.71:3000",
+      "http://localhost:8081", // Expo DevTools
+      "http://192.168.1.71:8081", // Expo DevTools sur réseau
+      "*" // Permettre toutes les origines pour les apps mobiles
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["*"]
+  },
+  allowEIO3: true // Support pour les anciennes versions de Socket.IO
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 
 // Middleware
 app.use(cors());
@@ -347,10 +358,12 @@ app.get('/api/health', (req, res) => {
 });
 
 // Démarrer le serveur
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`📱 WebSocket disponible sur ws://localhost:${PORT}`);
+  console.log(`📱 WebSocket disponible sur ws://192.168.1.71:${PORT}`);
   console.log(`🌐 API REST disponible sur http://localhost:${PORT}/api`);
+  console.log(`🌐 API REST disponible sur http://192.168.1.71:${PORT}/api`);
 });
 
 // Gestion propre de l'arrêt
