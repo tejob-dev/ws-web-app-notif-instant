@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="service_stop_on_terminate">false</bool>
+    <bool name="service_start_on_boot">true</bool>
+    <bool name="notifications_enabled_by_default">true</bool>
+    <bool name="websocket_reconnection_enabled">true</bool>
+    <bool name="persistent_notification_enabled">true</bool>
+</resources>

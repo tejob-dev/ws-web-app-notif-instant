@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_notification_app_title">Comment utiliser NotificationApp</string>
+    <string name="help_notification_app_content">Cette application vous permet de recevoir des notifications en temps réel via WebSocket. Le service fonctionne en arrière-plan et affiche une notification persistante dans la barre d\'état.</string>
+    <string name="help_websocket_title">Connexion WebSocket</string>
+    <string name="help_websocket_content">L\'application se connecte automatiquement au serveur WebSocket configuré. En cas de déconnexion, elle tente de se reconnecter automatiquement.</string>
+    <string name="help_notifications_title">Notifications</string>
+    <string name="help_notifications_content">Les notifications apparaissent dans la barre d\'état et peuvent être cliquées pour ouvrir l\'application. Une notification persistante indique que le service est actif.</string>
+    <string name="help_permissions_title">Permissions</string>
+    <string name="help_permissions_content">L\'application nécessite plusieurs permissions pour fonctionner correctement: notifications, vibration, réveil, service en premier plan, Internet et état réseau.</string>
+    <string name="help_troubleshooting_title">Dépannage</string>
+    <string name="help_troubleshooting_content">Si vous rencontrez des problèmes: vérifiez les permissions, désactivez l\'optimisation de la batterie, vérifiez la connexion réseau et redémarrez l\'application.</string>
+</resources>

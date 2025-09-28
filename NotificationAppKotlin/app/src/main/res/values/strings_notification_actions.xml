@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_action_open">Ouvrir</string>
+    <string name="notification_action_close">Fermer</string>
+    <string name="notification_action_retry">Réessayer</string>
+    <string name="notification_action_settings">Paramètres</string>
+    <string name="notification_action_help">Aide</string>
+    <string name="notification_action_about">À propos</string>
+    <string name="notification_action_debug">Debug</string>
+    <string name="notification_action_logs">Logs</string>
+</resources>

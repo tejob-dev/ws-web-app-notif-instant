@@ -1,0 +1,372 @@
+package com.notificationapp.kotlin
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.notificationapp.kotlin.adapter.MessageAdapter
+import com.notificationapp.kotlin.config.AppConfig
+import com.notificationapp.kotlin.databinding.ActivityMainBinding
+import com.notificationapp.kotlin.model.*
+import com.notificationapp.kotlin.service.BackgroundService
+import com.notificationapp.kotlin.service.NotificationService
+import com.notificationapp.kotlin.utils.AndroidCompatibility
+import kotlinx.coroutines.launch
+
+/**
+ * Activité principale de l'application NotificationApp Kotlin
+ * Reproduit l'interface utilisateur de l'app Expo
+ */
+class MainActivity : AppCompatActivity() {
+    
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var messageAdapter: MessageAdapter
+    private var backgroundService: BackgroundService? = null
+    private lateinit var notificationService: NotificationService
+    
+    private var isServiceRunning = false
+    private var connectionStatus = "Déconnecté"
+    private val messages = mutableListOf<Message>()
+    private var deviceInfo: DeviceInfo? = null
+    private var compatibilityInfo: CompatibilityInfo? = null
+    private var featureTests: FeatureTests? = null
+    
+    // Launcher pour les permissions
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            initializeApp()
+        } else {
+            Toast.makeText(this, "Permissions requises pour les notifications", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        setupUI()
+        checkPermissions()
+    }
+    
+    /**
+     * Configurer l'interface utilisateur
+     */
+    private fun setupUI() {
+        // Configurer la RecyclerView pour les messages
+        messageAdapter = MessageAdapter(messages)
+        binding.recyclerViewMessages.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = messageAdapter
+        }
+        
+        // Configurer les boutons
+        binding.buttonToggleService.setOnClickListener {
+            toggleService()
+        }
+        
+        binding.buttonClearMessages.setOnClickListener {
+            clearMessages()
+        }
+        
+        // Masquer les informations au début
+        binding.layoutCompatibility.visibility = View.GONE
+        binding.layoutFeatureTests.visibility = View.GONE
+        binding.layoutDeviceInfo.visibility = View.GONE
+    }
+    
+    /**
+     * Vérifier les permissions
+     */
+    private fun checkPermissions() {
+        val permissions = arrayOf(
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.VIBRATE,
+            Manifest.permission.WAKE_LOCK,
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        )
+        
+        val permissionsToRequest = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            initializeApp()
+        }
+    }
+    
+    /**
+     * Initialiser l'application
+     */
+    private fun initializeApp() {
+        lifecycleScope.launch {
+            try {
+                binding.progressBar.visibility = View.VISIBLE
+                
+                // Initialiser les services
+                initializeServices()
+                
+                // Charger les messages stockés
+                loadStoredMessages()
+                
+                // Vérifier la compatibilité
+                checkCompatibility()
+                
+                binding.progressBar.visibility = View.GONE
+                
+            } catch (error: Exception) {
+                binding.progressBar.visibility = View.GONE
+                Toast.makeText(this@MainActivity, "❌ Erreur lors de l'initialisation: ${error.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    /**
+     * Initialiser les services
+     */
+    private fun initializeServices() {
+        Log.d("MainActivity", "🔧 Initialisation des services...")
+        
+        // Initialiser le service de notifications
+        notificationService = NotificationService(this)
+        Log.d("MainActivity", "✅ NotificationService initialisé")
+        
+        // Démarrer le service en arrière-plan
+        val serviceIntent = Intent(this, BackgroundService::class.java)
+        Log.d("MainActivity", "🚀 Démarrage du BackgroundService...")
+        startService(serviceIntent)
+        
+        // Obtenir la référence au service lié
+        Log.d("MainActivity", "🔗 Liaison au BackgroundService...")
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE)
+    }
+    
+    /**
+     * Connexion au service
+     */
+    private val serviceConnection = object : android.content.ServiceConnection {
+        override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
+            Log.d("MainActivity", "🔗 ServiceConnection.onServiceConnected appelé")
+            try {
+                backgroundService = (service as BackgroundService.BackgroundServiceBinder).getService()
+                Log.d("MainActivity", "✅ Service connecté avec succès")
+                
+                // Mettre à jour l'interface utilisateur maintenant que le service est connecté
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "✅ Service connecté", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "❌ Erreur lors de la connexion au service", e)
+            }
+        }
+        
+        override fun onServiceDisconnected(name: android.content.ComponentName?) {
+            backgroundService = null
+            Log.d("MainActivity", "❌ Service déconnecté")
+        }
+    }
+    
+    /**
+     * Charger les messages stockés
+     */
+    private fun loadStoredMessages() {
+        lifecycleScope.launch {
+            try {
+                val storedMessages = notificationService.getStoredMessages()
+                messages.clear()
+                messages.addAll(storedMessages)
+                messageAdapter.notifyDataSetChanged()
+                
+                binding.textMessagesCount.text = "📨 Messages reçus (${messages.size})"
+            } catch (error: Exception) {
+                Toast.makeText(this@MainActivity, "Erreur lors du chargement des messages", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    /**
+     * Vérifier la compatibilité
+     */
+    private fun checkCompatibility() {
+        try {
+            // Obtenir les informations de compatibilité
+            compatibilityInfo = AndroidCompatibility.getDeviceInfo(this)
+            deviceInfo = backgroundService?.getDeviceInfo()
+            
+            // Effectuer les tests de fonctionnalités
+            featureTests = AndroidCompatibility.testFeatures(this)
+            
+            // Afficher les informations
+            displayCompatibilityInfo()
+            displayFeatureTests()
+            displayDeviceInfo()
+            
+        } catch (error: Exception) {
+            Toast.makeText(this, "Erreur lors de la vérification de compatibilité", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    /**
+     * Afficher les informations de compatibilité
+     */
+    private fun displayCompatibilityInfo() {
+        compatibilityInfo?.let { info ->
+            binding.layoutCompatibility.visibility = View.VISIBLE
+            binding.textCompatibilityStatus.text = info.message
+            binding.textCompatibilityStatus.setTextColor(
+                if (info.compatible) getColor(android.R.color.holo_green_dark) 
+                else getColor(android.R.color.holo_red_dark)
+            )
+            binding.textOsVersion.text = "Version Android: ${deviceInfo?.osVersion}"
+            binding.textModelName.text = "Modèle: ${deviceInfo?.modelName}"
+            binding.textBrand.text = "Marque: ${deviceInfo?.brand}"
+            
+            // Afficher les fonctionnalités disponibles
+            if (info.features.isNotEmpty()) {
+                binding.textFeaturesAvailable.text = "Fonctionnalités disponibles:\n" + 
+                    info.features.joinToString("\n") { "• $it" }
+            }
+        }
+    }
+    
+    /**
+     * Afficher les tests de fonctionnalités
+     */
+    private fun displayFeatureTests() {
+        featureTests?.let { tests ->
+            binding.layoutFeatureTests.visibility = View.VISIBLE
+            binding.textWebsocketTest.text = "WebSocket: ${if (tests.webSocketConnection) "✅" else "❌"}"
+            binding.textNotificationsTest.text = "Notifications: ${if (tests.notifications) "✅" else "❌"}"
+            binding.textBackgroundTaskTest.text = "Tâches arrière-plan: ${if (tests.backgroundTask) "✅" else "❌"}"
+            binding.textPersistentNotificationTest.text = "Notification persistante: ${if (tests.persistentNotification) "✅" else "❌"}"
+            binding.textLocalStorageTest.text = "Stockage local: ${if (tests.localStorage) "✅" else "❌"}"
+        }
+    }
+    
+    /**
+     * Afficher les informations de l'appareil
+     */
+    private fun displayDeviceInfo() {
+        deviceInfo?.let { info ->
+            binding.layoutDeviceInfo.visibility = View.VISIBLE
+            binding.textPlatform.text = "Plateforme: ${info.platform}"
+            binding.textServiceActive.text = "Service actif: ${if (info.isServiceRunning) "Oui" else "Non"}"
+            binding.textPollingActive.text = "Polling local: ${if (info.isPolling) "Oui" else "Non"}"
+            binding.textDeviceId.text = "ID Appareil: ${info.deviceId}"
+        }
+    }
+    
+    /**
+     * Basculer l'état du service
+     */
+    private fun toggleService() {
+        lifecycleScope.launch {
+            try {
+                if (backgroundService == null) {
+                    Toast.makeText(this@MainActivity, "⏳ Service en cours de connexion...", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                
+                if (isServiceRunning) {
+                    val success = backgroundService!!.stop()
+                    if (success) {
+                        isServiceRunning = false
+                        connectionStatus = "Arrêté"
+                        updateConnectionStatus()
+                        Toast.makeText(this@MainActivity, "🛑 Service arrêté", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    val success = backgroundService!!.start()
+                    if (success) {
+                        isServiceRunning = true
+                        connectionStatus = "Connecté"
+                        updateConnectionStatus()
+                        Toast.makeText(this@MainActivity, "▶️ Service démarré", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (error: Exception) {
+                Toast.makeText(this@MainActivity, "Erreur lors du changement d'état du service", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    /**
+     * Effacer les messages
+     */
+    private fun clearMessages() {
+        lifecycleScope.launch {
+            try {
+                // Effacer les messages de la mémoire
+                messages.clear()
+                messageAdapter.notifyDataSetChanged()
+                
+                // Effacer les messages du stockage local
+                val prefs = getSharedPreferences(AppConfig.Preferences.PREF_NAME, MODE_PRIVATE)
+                prefs.edit().remove("messages").apply()
+                
+                binding.textMessagesCount.text = "📨 Messages reçus (0)"
+                Toast.makeText(this@MainActivity, "🗑️ Messages effacés", Toast.LENGTH_SHORT).show()
+            } catch (error: Exception) {
+                Toast.makeText(this@MainActivity, "Erreur lors de l'effacement des messages", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    /**
+     * Mettre à jour le statut de connexion
+     */
+    private fun updateConnectionStatus() {
+        val statusColor = when (connectionStatus) {
+            "Connecté" -> getColor(android.R.color.holo_green_dark)
+            "Déconnecté" -> getColor(android.R.color.holo_red_dark)
+            "Arrêté" -> getColor(android.R.color.holo_orange_dark)
+            else -> getColor(android.R.color.darker_gray)
+        }
+        
+        val statusIcon = when (connectionStatus) {
+            "Connecté" -> "🟢"
+            "Déconnecté" -> "🔴"
+            "Arrêté" -> "🟡"
+            else -> "⚪"
+        }
+        
+        binding.statusIndicator.setBackgroundColor(statusColor)
+        binding.textConnectionStatus.text = "$statusIcon $connectionStatus"
+        
+        // Mettre à jour le texte du bouton
+        binding.buttonToggleService.text = if (isServiceRunning) "🛑 Arrêter le service" else "▶️ Démarrer le service"
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Mettre à jour le statut de connexion quand l'app revient au premier plan
+        updateConnectionStatus()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Arrêter le service si nécessaire
+        if (isServiceRunning) {
+            lifecycleScope.launch {
+                backgroundService?.stop()
+            }
+        }
+    }
+}

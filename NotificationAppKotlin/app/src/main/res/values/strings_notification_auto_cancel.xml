@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_auto_cancel_default">true</string>
+    <string name="notification_channel_auto_cancel_message">true</string>
+    <string name="notification_channel_auto_cancel_service">false</string>
+    <string name="notification_channel_auto_cancel_error">true</string>
+    <string name="notification_channel_auto_cancel_warning">true</string>
+    <string name="notification_channel_auto_cancel_info">true</string>
+    <string name="notification_channel_auto_cancel_success">true</string>
+    <string name="notification_channel_auto_cancel_debug">true</string>
+    <string name="notification_channel_auto_cancel_persistent">false</string>
+</resources>

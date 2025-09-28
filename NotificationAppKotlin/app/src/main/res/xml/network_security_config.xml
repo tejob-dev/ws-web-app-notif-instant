@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Autoriser l'accès aux adresses locales (basé sur le projet de référence) -->
+        <domain includeSubdomains="true">192.168.1.71</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">69.197.142.189</domain>
+    </domain-config>
+    
+    <!-- Configuration par défaut pour les autres domaines -->
+    <!-- Configuration spécifique pour les ports Docker -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

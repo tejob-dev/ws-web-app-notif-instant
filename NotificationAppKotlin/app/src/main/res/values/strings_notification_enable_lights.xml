@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_enable_lights_default">true</string>
+    <string name="notification_channel_enable_lights_message">true</string>
+    <string name="notification_channel_enable_lights_service">true</string>
+    <string name="notification_channel_enable_lights_error">true</string>
+    <string name="notification_channel_enable_lights_warning">true</string>
+    <string name="notification_channel_enable_lights_info">true</string>
+    <string name="notification_channel_enable_lights_success">true</string>
+    <string name="notification_channel_enable_lights_debug">false</string>
+    <string name="notification_channel_enable_lights_persistent">true</string>
+</resources>

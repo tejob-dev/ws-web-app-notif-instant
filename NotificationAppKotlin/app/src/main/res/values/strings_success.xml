@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="success_service_started">Service démarré avec succès</string>
+    <string name="success_service_stopped">Service arrêté avec succès</string>
+    <string name="success_websocket_connected">Connecté au serveur WebSocket</string>
+    <string name="success_message_saved">Message sauvegardé</string>
+    <string name="success_messages_cleared">Messages effacés</string>
+    <string name="success_notification_sent">Notification envoyée</string>
+    <string name="success_token_registered">Token enregistré</string>
+</resources>

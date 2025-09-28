@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_title_default">🔔 Nouvelle notification</string>
+    <string name="notification_title_persistent">🔔 Service de notifications actif</string>
+    <string name="notification_title_message">📨 Message reçu</string>
+    <string name="notification_title_error">❌ Erreur de connexion</string>
+    <string name="notification_title_warning">⚠️ Avertissement</string>
+    <string name="notification_title_info">ℹ️ Information</string>
+    <string name="notification_title_success">✅ Succès</string>
+    <string name="notification_title_debug">🐛 Debug</string>
+</resources>

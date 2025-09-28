@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_id">notification-channel</string>
+    <string name="notification_channel_name">Notifications en temps réel</string>
+    <string name="notification_channel_description">Canal pour les notifications de l\'application</string>
+    <string name="preferences_name">notification_app_prefs</string>
+    <string name="database_name">notification_app.db</string>
+    <string name="server_url">192.168.1.71:3002</string>
+</resources>

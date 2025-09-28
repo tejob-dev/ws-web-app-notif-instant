@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_name_message">Messages</string>
+    <string name="notification_channel_name_service">Service</string>
+    <string name="notification_channel_name_error">Erreurs</string>
+    <string name="notification_channel_name_warning">Avertissements</string>
+    <string name="notification_channel_name_info">Informations</string>
+    <string name="notification_channel_name_success">Succès</string>
+    <string name="notification_channel_name_debug">Debug</string>
+    <string name="notification_channel_name_persistent">Persistant</string>
+</resources>

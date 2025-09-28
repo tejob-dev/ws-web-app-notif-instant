@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const webpush = require('web-push');
 const admin = require('firebase-admin');
 const firebaseConfig = require('./firebase-config');
+const NativeWebSocketServer = require('./websocket-server');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -31,7 +32,8 @@ const io = socketIo(server, {
   allowEIO3: true // Support pour les anciennes versions de Socket.IO
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const WS_PORT = process.env.WS_PORT || 3002; // Port pour le serveur WebSocket natif
 
 // Middleware
 app.use(cors());
@@ -128,6 +130,9 @@ db.serialize(() => {
 
 // Stockage en mémoire des connexions WebSocket
 const connectedClients = new Set();
+
+// Instance du serveur WebSocket natif
+let nativeWebSocketServer = null;
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
@@ -257,9 +262,14 @@ async function sendMessageHandler(content, type = 'info', res) {
       }
     );
 
-    // Envoyer via WebSocket à tous les clients connectés
+    // Envoyer via WebSocket à tous les clients connectés (Socket.IO)
     io.emit('message', message);
-    console.log(`Message envoyé à ${connectedClients.size} client(s) connecté(s)`);
+    console.log(`Message Socket.IO envoyé à ${connectedClients.size} client(s) connecté(s)`);
+
+    // Envoyer aussi via WebSocket natif
+    if (nativeWebSocketServer) {
+      nativeWebSocketServer.broadcast(message);
+    }
 
     // Envoyer des notifications push aux appareils mobiles
     db.all('SELECT token, platform FROM mobile_tokens', [], (err, rows) => {
@@ -378,19 +388,34 @@ app.get('/api/health', (req, res) => {
 });
 
 // Démarrer le serveur
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📱 WebSocket disponible sur ws://localhost:${PORT}`);
-  console.log(`📱 WebSocket disponible sur ws://192.168.1.71:${PORT}`);
-  console.log(`📱 WebSocket disponible sur ws://69.197.142.189:5022`);
+server.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🚀 Serveur Socket.IO démarré sur le port ${PORT}`);
+  console.log(`📱 Socket.IO disponible sur ws://localhost:${PORT}`);
+  console.log(`📱 Socket.IO disponible sur ws://192.168.1.71:${PORT}`);
+  console.log(`📱 Socket.IO disponible sur ws://69.197.142.189:5022`);
   console.log(`🌐 API REST disponible sur http://localhost:${PORT}/api`);
   console.log(`🌐 API REST disponible sur http://192.168.1.71:${PORT}/api`);
   console.log(`🌐 API REST disponible sur http://69.197.142.189:5022/api`);
+
+  // Démarrer le serveur WebSocket natif
+  try {
+    nativeWebSocketServer = new NativeWebSocketServer(WS_PORT);
+    await nativeWebSocketServer.start();
+    console.log(`✅ Serveur WebSocket natif démarré sur le port ${WS_PORT}`);
+  } catch (error) {
+    console.error('❌ Erreur lors du démarrage du serveur WebSocket natif:', error);
+  }
 });
 
 // Gestion propre de l'arrêt
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\n🛑 Arrêt du serveur...');
+  
+  // Arrêter le serveur WebSocket natif
+  if (nativeWebSocketServer) {
+    await nativeWebSocketServer.stop();
+  }
+  
   db.close((err) => {
     if (err) {
       console.error('Erreur lors de la fermeture de la base de données:', err);

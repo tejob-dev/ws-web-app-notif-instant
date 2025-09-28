@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_ongoing_default">false</string>
+    <string name="notification_channel_ongoing_message">false</string>
+    <string name="notification_channel_ongoing_service">true</string>
+    <string name="notification_channel_ongoing_error">false</string>
+    <string name="notification_channel_ongoing_warning">false</string>
+    <string name="notification_channel_ongoing_info">false</string>
+    <string name="notification_channel_ongoing_success">false</string>
+    <string name="notification_channel_ongoing_debug">false</string>
+    <string name="notification_channel_ongoing_persistent">true</string>
+</resources>

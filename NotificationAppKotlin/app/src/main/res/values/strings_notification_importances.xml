@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_importance_default">high</string>
+    <string name="notification_channel_importance_message">high</string>
+    <string name="notification_channel_importance_service">high</string>
+    <string name="notification_channel_importance_error">high</string>
+    <string name="notification_channel_importance_warning">high</string>
+    <string name="notification_channel_importance_info">high</string>
+    <string name="notification_channel_importance_success">high</string>
+    <string name="notification_channel_importance_debug">low</string>
+    <string name="notification_channel_importance_persistent">high</string>
+</resources>

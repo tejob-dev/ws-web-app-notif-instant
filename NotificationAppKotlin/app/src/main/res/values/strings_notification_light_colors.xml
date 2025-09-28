@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_light_color_default">#FF231F7C</string>
+    <string name="notification_channel_light_color_message">#FF231F7C</string>
+    <string name="notification_channel_light_color_service">#FF231F7C</string>
+    <string name="notification_channel_light_color_error">#FFFF0000</string>
+    <string name="notification_channel_light_color_warning">#FFFFFF00</string>
+    <string name="notification_channel_light_color_info">#FF0000FF</string>
+    <string name="notification_channel_light_color_success">#FF00FF00</string>
+    <string name="notification_channel_light_color_debug">#FF808080</string>
+    <string name="notification_channel_light_color_persistent">#FF231F7C</string>
+</resources>

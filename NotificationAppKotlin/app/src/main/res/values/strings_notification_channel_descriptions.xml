@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_description_message">Canal pour les messages reçus</string>
+    <string name="notification_channel_description_service">Canal pour le service en arrière-plan</string>
+    <string name="notification_channel_description_error">Canal pour les erreurs</string>
+    <string name="notification_channel_description_warning">Canal pour les avertissements</string>
+    <string name="notification_channel_description_info">Canal pour les informations</string>
+    <string name="notification_channel_description_success">Canal pour les succès</string>
+    <string name="notification_channel_description_debug">Canal pour les messages de debug</string>
+    <string name="notification_channel_description_persistent">Canal pour les notifications persistantes</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_body_default">Vous avez reçu une nouvelle notification</string>
+    <string name="notification_body_persistent">L\'application écoute les notifications en temps réel</string>
+    <string name="notification_body_message">Nouveau message: %1$s</string>
+    <string name="notification_body_error">Erreur de connexion au serveur</string>
+    <string name="notification_body_warning">Avertissement: %1$s</string>
+    <string name="notification_body_info">Information: %1$s</string>
+    <string name="notification_body_success">Opération réussie: %1$s</string>
+    <string name="notification_body_debug">Message de debug: %1$s</string>
+</resources>

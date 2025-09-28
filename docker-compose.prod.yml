@@ -13,6 +13,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - WS_PORT=3002
       - DB_PATH=/app/data/notifications.db
     ports:
-      - "5022:3001"  # Port production
+      - "5022:3001"  # Port API REST production
+      - "5023:3002"  # Port WebSocket natif production

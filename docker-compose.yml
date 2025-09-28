@@ -6,10 +6,12 @@ services:
       dockerfile: Dockerfile
     container_name: notification-backend
     # ports:
-    #   - "3001:3001"  # Port par défaut pour le développement
+    #   - "3001:3001"  # Port API REST
+    #   - "5023:5023"  # Port WebSocket natif
     # environment:
     #   - NODE_ENV=development
     #   - PORT=3001
+    #   - WS_PORT=5023
     volumes:
       - backend_data:/app/data
       - backend_data:/app/notifications.db

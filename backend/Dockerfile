@@ -24,8 +24,9 @@ RUN mkdir -p /app/data && \
     chmod 664 /app/data/notifications.db && \
     chown -R nodejs:nodejs /app
 
-# Exposer le port 3001
+# Exposer les ports
 EXPOSE 3001
+EXPOSE 3002
 
 # Changer vers l'utilisateur non-root
 USER nodejs

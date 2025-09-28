@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_priority_default">high</string>
+    <string name="notification_channel_priority_message">high</string>
+    <string name="notification_channel_priority_service">high</string>
+    <string name="notification_channel_priority_error">high</string>
+    <string name="notification_channel_priority_warning">high</string>
+    <string name="notification_channel_priority_info">high</string>
+    <string name="notification_channel_priority_success">high</string>
+    <string name="notification_channel_priority_debug">low</string>
+    <string name="notification_channel_priority_persistent">high</string>
+</resources>

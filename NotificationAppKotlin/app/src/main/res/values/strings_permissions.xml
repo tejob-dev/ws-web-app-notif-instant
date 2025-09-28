@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_notification_rationale">Cette application a besoin de la permission de notification pour afficher les alertes en temps réel.</string>
+    <string name="permission_vibrate_rationale">Cette application a besoin de la permission de vibration pour les notifications.</string>
+    <string name="permission_wake_lock_rationale">Cette application a besoin de la permission de réveil pour maintenir le service actif.</string>
+    <string name="permission_foreground_service_rationale">Cette application a besoin de la permission de service en premier plan pour les notifications.</string>
+    <string name="permission_internet_rationale">Cette application a besoin de la permission d\'accès Internet pour se connecter au serveur.</string>
+    <string name="permission_network_state_rationale">Cette application a besoin de la permission d\'état réseau pour vérifier la connectivité.</string>
+</resources>

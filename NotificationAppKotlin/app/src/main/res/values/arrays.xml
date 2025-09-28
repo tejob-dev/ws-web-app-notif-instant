@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="websocket_fallback_urls">
+        <item>192.168.1.71:3002</item>
+        <item>10.0.2.2:3002</item>
+        <item>localhost:3002</item>
+        <item>69.197.142.189:3002</item>
+        <item>192.168.1.71:3001</item>
+        <item>10.0.2.2:3001</item>
+        <item>69.197.142.189:5022</item>
+    </string-array>
+    
+    <string-array name="notification_features">
+        <item>WebSocket natif</item>
+        <item>Notifications push</item>
+        <item>Service en arrière-plan</item>
+        <item>Stockage local</item>
+        <item>Reconnexion automatique</item>
+        <item>Notification persistante</item>
+    </string-array>
+</resources>

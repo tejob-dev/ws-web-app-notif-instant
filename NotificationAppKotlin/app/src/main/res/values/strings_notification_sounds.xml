@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_sound_default">default</string>
+    <string name="notification_channel_sound_message">message</string>
+    <string name="notification_channel_sound_service">service</string>
+    <string name="notification_channel_sound_error">error</string>
+    <string name="notification_channel_sound_warning">warning</string>
+    <string name="notification_channel_sound_info">info</string>
+    <string name="notification_channel_sound_success">success</string>
+    <string name="notification_channel_sound_debug">debug</string>
+    <string name="notification_channel_sound_persistent">persistent</string>
+</resources>

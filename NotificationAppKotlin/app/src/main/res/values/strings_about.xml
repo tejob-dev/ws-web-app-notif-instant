@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_app_name">NotificationApp Kotlin</string>
+    <string name="about_app_version">Version 1.0</string>
+    <string name="about_app_description">Application de notifications en temps réel développée en Kotlin pour Android</string>
+    <string name="about_developer">Développé par</string>
+    <string name="about_license">Licence MIT</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_website">Site web</string>
+    <string name="about_email">Email</string>
+    <string name="about_phone">Téléphone</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_service_start_failed">Impossible de démarrer le service de notifications</string>
+    <string name="error_service_stop_failed">Impossible d\'arrêter le service de notifications</string>
+    <string name="error_websocket_connection_failed">Impossible de se connecter au serveur WebSocket</string>
+    <string name="error_notification_permission_denied">Permission de notification refusée</string>
+    <string name="error_device_not_compatible">Appareil non compatible avec les notifications</string>
+    <string name="error_message_save_failed">Impossible de sauvegarder le message</string>
+    <string name="error_message_load_failed">Impossible de charger les messages</string>
+    <string name="error_clear_messages_failed">Impossible d\'effacer les messages</string>
+</resources>

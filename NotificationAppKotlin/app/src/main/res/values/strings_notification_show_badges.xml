@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_show_badge_default">true</string>
+    <string name="notification_channel_show_badge_message">true</string>
+    <string name="notification_channel_show_badge_service">true</string>
+    <string name="notification_channel_show_badge_error">true</string>
+    <string name="notification_channel_show_badge_warning">true</string>
+    <string name="notification_channel_show_badge_info">true</string>
+    <string name="notification_channel_show_badge_success">true</string>
+    <string name="notification_channel_show_badge_debug">false</string>
+    <string name="notification_channel_show_badge_persistent">true</string>
+</resources>

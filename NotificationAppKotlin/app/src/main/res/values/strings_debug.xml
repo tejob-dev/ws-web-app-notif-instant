@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debug_websocket_connecting">Connexion WebSocket vers %1$s</string>
+    <string name="debug_websocket_connected">WebSocket connecté vers %1$s</string>
+    <string name="debug_websocket_disconnected">WebSocket déconnecté de %1$s</string>
+    <string name="debug_message_received">Message reçu: %1$s</string>
+    <string name="debug_message_sent">Message envoyé: %1$s</string>
+    <string name="debug_notification_created">Notification créée: %1$s</string>
+    <string name="debug_service_started">Service démarré</string>
+    <string name="debug_service_stopped">Service arrêté</string>
+    <string name="debug_token_registered">Token enregistré: %1$s</string>
+</resources>

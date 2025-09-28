@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="notification_id_persistent">1001</integer>
+    <integer name="notification_id_message_base">2000</integer>
+    <integer name="max_messages_stored">100</integer>
+    <integer name="connection_timeout">15000</integer>
+    <integer name="reconnection_attempts">5</integer>
+    <integer name="reconnection_delay">5000</integer>
+</resources>

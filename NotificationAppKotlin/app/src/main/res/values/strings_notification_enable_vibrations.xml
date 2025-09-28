@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_enable_vibration_default">true</string>
+    <string name="notification_channel_enable_vibration_message">true</string>
+    <string name="notification_channel_enable_vibration_service">true</string>
+    <string name="notification_channel_enable_vibration_error">true</string>
+    <string name="notification_channel_enable_vibration_warning">true</string>
+    <string name="notification_channel_enable_vibration_info">true</string>
+    <string name="notification_channel_enable_vibration_success">true</string>
+    <string name="notification_channel_enable_vibration_debug">false</string>
+    <string name="notification_channel_enable_vibration_persistent">true</string>
+</resources>

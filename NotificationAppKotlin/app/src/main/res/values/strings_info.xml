@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="info_service_running">Service en cours d\'exécution</string>
+    <string name="info_service_stopped">Service arrêté</string>
+    <string name="info_websocket_connecting">Connexion WebSocket en cours...</string>
+    <string name="info_websocket_disconnected">WebSocket déconnecté</string>
+    <string name="info_notification_received">Notification reçue</string>
+    <string name="info_message_processing">Traitement du message...</string>
+    <string name="info_device_info_loading">Chargement des informations de l\'appareil...</string>
+    <string name="info_compatibility_checking">Vérification de compatibilité...</string>
+</resources>

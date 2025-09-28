@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="warning_permissions_required">Permissions requises pour les notifications</string>
+    <string name="warning_battery_optimization">Optimisation de la batterie détectée</string>
+    <string name="warning_network_unavailable">Réseau non disponible</string>
+    <string name="warning_websocket_reconnecting">Reconnexion WebSocket en cours...</string>
+    <string name="warning_service_unavailable">Service non disponible</string>
+    <string name="warning_notification_channel_missing">Canal de notification manquant</string>
+    <string name="warning_device_compatibility">Problème de compatibilité détecté</string>
+</resources>
