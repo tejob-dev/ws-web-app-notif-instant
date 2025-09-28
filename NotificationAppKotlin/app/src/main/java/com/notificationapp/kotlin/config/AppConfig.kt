@@ -14,14 +14,14 @@ object AppConfig {
         // Adresses alternatives à essayer (WebSocket natif)
         val FALLBACK_URLS = listOf(
             //"192.168.1.71:5023",  // PRIORITÉ - Docker WebSocket natif
-            "192.168.1.71:3002",  // Appareil physique (port par défaut)
+            //"192.168.1.71:3002",  // Appareil physique (port par défaut)
             //"10.0.2.2:5023",      // Émulateur Android Docker
             //"10.0.2.2:3002",      // Émulateur Android (port par défaut)
             //"localhost:5023",      // Développement local Docker
             //"localhost:3002",      // Développement local (port par défaut)
             //"127.0.0.1:5023",      // Localhost Docker alternatif
             //"127.0.0.1:3002",      // Localhost alternatif (port par défaut)
-            //"69.197.142.189:5023", // Production Docker WebSocket natif
+            "69.197.142.189:5023", // Production Docker WebSocket natif
             //"69.197.142.189:3002", // Production WebSocket natif (port par défaut)
             //"192.168.1.71:3001",   // Fallback Socket.IO physique
             //"10.0.2.2:3001",      // Fallback Socket.IO émulateur
@@ -30,9 +30,9 @@ object AppConfig {
         
         // URLs Socket.IO spécifiques
         val SOCKETIO_URLS = listOf(
-            "http://192.168.1.71:3001",   // Local Socket.IO (PRIORITÉ)
-            "http://10.0.2.2:3001",       // Émulateur Socket.IO
-            "http://localhost:3001",      // Développement local Socket.IO
+//            "http://192.168.1.71:3001",   // Local Socket.IO (PRIORITÉ)
+//            "http://10.0.2.2:3001",       // Émulateur Socket.IO
+//            "http://localhost:3001",      // Développement local Socket.IO
             "http://69.197.142.189:5022", // Production Socket.IO
         )
         
