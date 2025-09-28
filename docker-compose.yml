@@ -12,7 +12,7 @@ services:
     #   - PORT=3001
     volumes:
       - backend_data:/app/data
-      - ./backend/notifications.db:/app/notifications.db
+      - backend_data:/app/notifications.db
     networks:
       - notification-network
     restart: unless-stopped
