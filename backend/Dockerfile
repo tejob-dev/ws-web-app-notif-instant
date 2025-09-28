@@ -17,19 +17,18 @@ COPY . .
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Créer le répertoire pour la base de données avec les bonnes permissions
-RUN mkdir -p /app/data && chown -R nodejs:nodejs /app
-
-# Copier le script d'initialisation
-COPY init-db.sh /app/init-db.sh
-RUN chmod +x /app/init-db.sh
+# Créer les répertoires nécessaires avec les bonnes permissions
+RUN mkdir -p /app/data && \
+    touch /app/notifications.db && \
+    chmod 664 /app/notifications.db && \
+    chmod 755 /app/data && \
+    chown -R nodejs:nodejs /app
 
 # Exposer le port 3001
 EXPOSE 3001
 
-# Changer la propriété des fichiers
-RUN chown -R nodejs:nodejs /app
+# Changer vers l'utilisateur non-root
 USER nodejs
 
-# Script de démarrage avec initialisation de la base de données
-CMD ["sh", "-c", "./init-db.sh && npm start"]
+# Commande pour démarrer l'application
+CMD ["npm", "start"]
