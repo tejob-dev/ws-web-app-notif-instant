@@ -19,6 +19,8 @@ const io = socketIo(server, {
       "http://192.168.1.71:3000",
       "http://localhost:8081", // Expo DevTools
       "http://192.168.1.71:8081", // Expo DevTools sur réseau
+      "http://69.197.142.189:5020", // Frontend production
+      "http://69.197.142.189:5022", // Backend production
       "*" // Permettre toutes les origines pour les apps mobiles
     ],
     methods: ["GET", "POST"],
@@ -130,12 +132,12 @@ io.on('connection', (socket) => {
   });
 
   // Envoyer un message de bienvenue
-  socket.emit('message', {
-    id: uuidv4(),
-    content: 'Vous êtes maintenant connecté au système de notifications !',
-    type: 'success',
-    timestamp: new Date()
-  });
+  // socket.emit('message', {
+  //   id: uuidv4(),
+  //   content: 'Vous êtes maintenant connecté au système de notifications !',
+  //   type: 'success',
+  //   timestamp: new Date()
+  // });
 
   // Enregistrer un token mobile
   socket.on('register-mobile-token', (data) => {
@@ -221,11 +223,9 @@ async function sendMobileNotification(token, platform, message) {
 
 // API Routes
 
-// Envoyer un message broadcast
-app.post('/api/send-message', async (req, res) => {
+// Fonction commune pour envoyer un message
+async function sendMessageHandler(content, type = 'info', res) {
   try {
-    const { content, type = 'info' } = req.body;
-    
     if (!content) {
       return res.status(400).json({ error: 'Le contenu du message est requis' });
     }
@@ -274,6 +274,18 @@ app.post('/api/send-message', async (req, res) => {
     console.error('Erreur lors de l\'envoi du message:', error);
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }
+}
+
+// Envoyer un message broadcast via POST
+app.post('/api/send-message', async (req, res) => {
+  const { content, type = 'info' } = req.body;
+  await sendMessageHandler(content, type, res);
+});
+
+// Envoyer un message broadcast via GET
+app.get('/api/send-message', async (req, res) => {
+  const { content, type = 'info' } = req.query;
+  await sendMessageHandler(content, type, res);
 });
 
 // Récupérer l'historique des messages
@@ -362,8 +374,10 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`📱 WebSocket disponible sur ws://localhost:${PORT}`);
   console.log(`📱 WebSocket disponible sur ws://192.168.1.71:${PORT}`);
+  console.log(`📱 WebSocket disponible sur ws://69.197.142.189:5022`);
   console.log(`🌐 API REST disponible sur http://localhost:${PORT}/api`);
   console.log(`🌐 API REST disponible sur http://192.168.1.71:${PORT}/api`);
+  console.log(`🌐 API REST disponible sur http://69.197.142.189:5022/api`);
 });
 
 // Gestion propre de l'arrêt
