@@ -1,6 +1,7 @@
 package com.notificationapp.kotlin.service
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
@@ -36,6 +37,9 @@ class SocketIOService : Service() {
     private var messageListener: ((Message) -> Unit)? = null
     private var errorListener: ((String) -> Unit)? = null
     
+    // Service de notifications
+    private var notificationService: NotificationService? = null
+    
     /**
      * Définir le listener pour le statut de connexion
      */
@@ -66,11 +70,26 @@ class SocketIOService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "🚀 Service Socket.IO créé")
+        
+        // Initialiser le service de notifications
+        notificationService = NotificationService(this)
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "📡 Service Socket.IO démarré")
         return START_STICKY
+    }
+    
+    /**
+     * Initialiser le service de notifications
+     */
+    suspend fun initializeNotifications(): Boolean {
+        return try {
+            notificationService?.initialize() ?: false
+        } catch (error: Exception) {
+            Log.e(TAG, "❌ Erreur lors de l'initialisation des notifications", error)
+            false
+        }
     }
     
     /**
@@ -92,6 +111,18 @@ class SocketIOService : Service() {
                     if (success) {
                         Log.d(TAG, "✅ Connexion Socket.IO réussie: $url")
                         reconnectAttempts = 0
+                        
+                        // Initialiser les notifications après connexion réussie
+                        serviceScope.launch {
+                            val notificationInitialized = initializeNotifications()
+                            if (notificationInitialized) {
+                                Log.d(TAG, "✅ Service de notifications initialisé avec succès")
+                            } else {
+                                Log.w(TAG, "⚠️ Échec de l'initialisation du service de notifications")
+                                Log.w(TAG, "💡 Vérifiez les permissions de notification dans les paramètres Android")
+                            }
+                        }
+                        
                         return true
                     }
                 } catch (error: Exception) {
@@ -172,10 +203,28 @@ class SocketIOService : Service() {
             // Écouter les messages personnalisés
             socket?.on("message") { args ->
                 try {
-                    val data = args[0] as? String
-                    if (data != null) {
-                        Log.d(TAG, "📨 Message Socket.IO reçu: $data")
-                        handleMessage(data)
+                    Log.d(TAG, "📨 Message Socket.IO reçu, args: ${args.contentToString()}")
+                    
+                    // Le serveur envoie un objet JSON directement
+                    val messageData = args[0]
+                    if (messageData != null) {
+                        Log.d(TAG, "📨 Message Socket.IO reçu (type: ${messageData::class.simpleName}): $messageData")
+                        
+                        // Gérer selon le type de données reçues
+                        when (messageData) {
+                            is String -> {
+                                Log.d(TAG, "📨 Message reçu comme String: $messageData")
+                                handleMessage(messageData)
+                            }
+                            is org.json.JSONObject -> {
+                                Log.d(TAG, "📨 Message reçu comme JSONObject: $messageData")
+                                handleMessage(messageData.toString())
+                            }
+                            else -> {
+                                Log.d(TAG, "📨 Message reçu comme autre type: $messageData")
+                                handleMessage(messageData.toString())
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Erreur lors du traitement du message Socket.IO", e)
@@ -184,10 +233,27 @@ class SocketIOService : Service() {
             
             socket?.on("notification") { args ->
                 try {
-                    val data = args[0] as? String
+                    Log.d(TAG, "🔔 Notification Socket.IO reçue, args: ${args.contentToString()}")
+                    
+                    val data = args[0]
                     if (data != null) {
-                        Log.d(TAG, "🔔 Notification Socket.IO reçue: $data")
-                        handleMessage(data)
+                        Log.d(TAG, "🔔 Notification Socket.IO reçue (type: ${data::class.simpleName}): $data")
+                        
+                        // Traiter comme un message normal
+                        when (data) {
+                            is String -> {
+                                Log.d(TAG, "🔔 Notification reçue comme String: $data")
+                                handleMessage(data)
+                            }
+                            is org.json.JSONObject -> {
+                                Log.d(TAG, "🔔 Notification reçue comme JSONObject: $data")
+                                handleMessage(data.toString())
+                            }
+                            else -> {
+                                Log.d(TAG, "🔔 Notification reçue comme autre type: $data")
+                                handleMessage(data.toString())
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ Erreur lors du traitement de la notification Socket.IO", e)
@@ -220,32 +286,71 @@ class SocketIOService : Service() {
      */
     private fun handleMessage(messageText: String) {
         try {
-            val jsonObject = JSONObject(messageText)
+            Log.d(TAG, "📨 Traitement du message Socket.IO: $messageText")
+            
+            // Essayer de parser comme JSON d'abord
+            val jsonObject = try {
+                JSONObject(messageText)
+            } catch (e: Exception) {
+                Log.w(TAG, "⚠️ Impossible de parser comme JSON, traitement comme message simple")
+                null
+            }
+            
+            val message = if (jsonObject != null) {
+                // Message JSON structuré
+                Message(
+                    id = jsonObject.optString("id", System.currentTimeMillis().toString()),
+                    content = jsonObject.optString("content", messageText),
+                    timestamp = jsonObject.optString("timestamp", System.currentTimeMillis().toString()),
+                    type = jsonObject.optString("type", "info")
+                )
+            } else {
+                // Message simple (texte brut)
+                Message(
+                    id = System.currentTimeMillis().toString(),
+                    content = messageText,
+                    timestamp = System.currentTimeMillis().toString(),
+                    type = "info"
+                )
+            }
+            
+            Log.d(TAG, "📨 Message créé: ID=${message.id}, Content='${message.content}', Type=${message.type}")
+            
+            // Créer l'événement WebSocket
             val event = WebSocketEvent(
-                type = jsonObject.optString("type", "message"),
-                data = jsonObject.opt("data"),
+                type = message.type,
+                data = message.content,
                 timestamp = System.currentTimeMillis()
-            )
-            
-            Log.d(TAG, "📨 Message Socket.IO traité: $event")
-            
-            // Créer un objet Message pour le ViewModel
-            val message = Message(
-                id = System.currentTimeMillis().toString(),
-                content = jsonObject.optString("content", messageText),
-                timestamp = System.currentTimeMillis().toString(),
-                type = event.type
             )
             
             // Notifier le ViewModel
             messageListener?.invoke(message)
+            
+            // Déclencher la notification Android
+            notificationService?.handleWebSocketMessage(message)
+            Log.d(TAG, "🔔 Notification déclenchée pour le message: '${message.content}'")
             
             // Appeler les gestionnaires enregistrés
             messageHandlers[event.type]?.invoke(event)
             messageHandlers["message"]?.invoke(event)
             
         } catch (error: Exception) {
-            Log.e(TAG, "❌ Erreur lors du parsing du message Socket.IO", error)
+            Log.e(TAG, "❌ Erreur lors du traitement du message Socket.IO: $messageText", error)
+            
+            // En cas d'erreur, créer un message simple pour éviter de perdre le contenu
+            val fallbackMessage = Message(
+                id = System.currentTimeMillis().toString(),
+                content = messageText,
+                timestamp = System.currentTimeMillis().toString(),
+                type = "error"
+            )
+            
+            Log.d(TAG, "📨 Message de fallback créé: ${fallbackMessage.content}")
+            messageListener?.invoke(fallbackMessage)
+            
+            // Déclencher la notification Android même pour le message de fallback
+            notificationService?.handleWebSocketMessage(fallbackMessage)
+            Log.d(TAG, "🔔 Notification déclenchée pour le message de fallback: '${fallbackMessage.content}'")
         }
     }
     

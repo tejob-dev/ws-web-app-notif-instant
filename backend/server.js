@@ -170,10 +170,44 @@ io.on('connection', (socket) => {
   });
 });
 
+// Fonction pour valider un token FCM
+function isValidFCMToken(token) {
+  // Un token FCM valide doit:
+  // - Commencer par un préfixe valide
+  // - Avoir une longueur appropriée (généralement 140+ caractères)
+  // - Contenir uniquement des caractères alphanumériques, tirets et underscores
+  
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  
+  // Vérifier la longueur minimale (tokens FCM sont généralement longs)
+  if (token.length < 100) {
+    return false;
+  }
+  
+  // Vérifier qu'il ne contient que des caractères valides
+  const validPattern = /^[A-Za-z0-9_-]+$/;
+  return validPattern.test(token);
+}
+
 // Fonction pour envoyer des notifications mobiles
 async function sendMobileNotification(token, platform, message) {
   try {
     if (platform === 'android' || platform === 'ios') {
+      // Valider le token avant d'essayer l'envoi
+      if (!isValidFCMToken(token)) {
+        console.log(`⚠️ Token FCM invalide détecté: ${token.substring(0, 20)}...`);
+        // Supprimer le token invalide de la base de données
+        db.run('DELETE FROM mobile_tokens WHERE token = ?', [token], (err) => {
+          if (err) {
+            console.error('Erreur lors de la suppression du token invalide:', err);
+          } else {
+            console.log('✅ Token invalide supprimé de la base de données');
+          }
+        });
+        return;
+      }
       if (!firebaseInitialized) {
         console.log('⚠️ Firebase non configuré - notification mobile ignorée');
         return;
@@ -182,18 +216,19 @@ async function sendMobileNotification(token, platform, message) {
       // Utiliser Firebase Cloud Messaging pour Android/iOS
       const notification = {
         title: 'Nouvelle notification',
-        body: message.content,
-        data: {
-          messageId: message.id,
-          type: message.type,
-          timestamp: message.timestamp.toISOString()
-        }
+        body: message.content
+      };
+
+      const messageData = {
+        messageId: message.id,
+        type: message.type,
+        timestamp: message.timestamp.toISOString()
       };
 
       const message_fcm = {
         token: token,
         notification: notification,
-        data: notification.data
+        data: messageData
       };
 
       const response = await admin.messaging().send(message_fcm);
@@ -219,15 +254,20 @@ async function sendMobileNotification(token, platform, message) {
   } catch (error) {
     console.error(`❌ Erreur lors de l'envoi de la notification mobile:`, error);
     
-    // Supprimer le token invalide
+    // Supprimer le token invalide pour tous les types d'erreurs FCM
     if (error.code === 'messaging/invalid-registration-token' || 
         error.code === 'messaging/registration-token-not-registered' ||
-        error.statusCode === 410) {
+        error.code === 'messaging/invalid-argument' ||
+        error.statusCode === 410 ||
+        error.message?.includes('registration token') ||
+        error.message?.includes('FCM registration token')) {
+      
+      console.log(`🗑️ Suppression du token invalide: ${token.substring(0, 20)}...`);
       db.run('DELETE FROM mobile_tokens WHERE token = ?', [token], (err) => {
         if (err) {
           console.error('Erreur lors de la suppression du token invalide:', err);
         } else {
-          console.log('Token invalide supprimé de la base de données');
+          console.log('✅ Token invalide supprimé de la base de données');
         }
       });
     }
@@ -251,13 +291,27 @@ async function sendMessageHandler(content, type = 'info', res) {
       timestamp: new Date()
     };
 
-    // Sauvegarder en base de données
+    // Sauvegarder en base de données avec gestion des doublons
     db.run(
-      'INSERT INTO messages (id, content, type) VALUES (?, ?, ?)',
+      'INSERT OR REPLACE INTO messages (id, content, type) VALUES (?, ?, ?)',
       [messageId, content, type],
       function(err) {
         if (err) {
           console.error('Erreur lors de la sauvegarde:', err);
+          // Si l'erreur persiste, générer un nouvel ID et réessayer
+          const newMessageId = uuidv4();
+          db.run(
+            'INSERT INTO messages (id, content, type) VALUES (?, ?, ?)',
+            [newMessageId, content, type],
+            function(retryErr) {
+              if (retryErr) {
+                console.error('Erreur lors de la sauvegarde (retry):', retryErr);
+              } else {
+                message.id = newMessageId; // Mettre à jour l'ID pour les autres opérations
+                console.log('Message sauvegardé avec un nouvel ID:', newMessageId);
+              }
+            }
+          );
         }
       }
     );
@@ -384,6 +438,67 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     connectedClients: connectedClients.size
+  });
+});
+
+// Nettoyer les tokens invalides
+app.post('/api/cleanup-invalid-tokens', (req, res) => {
+  db.all('SELECT token, platform FROM mobile_tokens', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erreur lors de la récupération des tokens' });
+    }
+
+    let cleanedCount = 0;
+    let processedCount = 0;
+    
+    if (rows.length === 0) {
+      return res.json({ 
+        message: 'Aucun token à nettoyer', 
+        cleaned: 0, 
+        total: 0 
+      });
+    }
+
+    rows.forEach(row => {
+      if (row.platform === 'android' || row.platform === 'ios') {
+        if (!isValidFCMToken(row.token)) {
+          db.run('DELETE FROM mobile_tokens WHERE token = ?', [row.token], (deleteErr) => {
+            if (deleteErr) {
+              console.error('Erreur lors de la suppression:', deleteErr);
+            } else {
+              cleanedCount++;
+            }
+            
+            processedCount++;
+            if (processedCount === rows.length) {
+              res.json({ 
+                message: 'Nettoyage terminé', 
+                cleaned: cleanedCount, 
+                total: rows.length 
+              });
+            }
+          });
+        } else {
+          processedCount++;
+          if (processedCount === rows.length) {
+            res.json({ 
+              message: 'Nettoyage terminé', 
+              cleaned: cleanedCount, 
+              total: rows.length 
+            });
+          }
+        }
+      } else {
+        processedCount++;
+        if (processedCount === rows.length) {
+          res.json({ 
+            message: 'Nettoyage terminé', 
+            cleaned: cleanedCount, 
+            total: rows.length 
+          });
+        }
+      }
+    });
   });
 });
 

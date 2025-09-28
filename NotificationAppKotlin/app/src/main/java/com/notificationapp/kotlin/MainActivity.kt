@@ -3,6 +3,7 @@ package com.notificationapp.kotlin
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -50,10 +51,28 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.values.all { it }
+        val postNotificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+        } else {
+            true // Pour les versions antérieures, considérer comme accordée
+        }
+        
+        Log.d("MainActivity", "🔐 Résultat des permissions:")
+        Log.d("MainActivity", "   - Toutes accordées: $allGranted")
+        Log.d("MainActivity", "   - POST_NOTIFICATIONS: $postNotificationsGranted")
+        
         if (allGranted) {
+            Log.d("MainActivity", "✅ Toutes les permissions accordées")
             initializeApp()
         } else {
-            Toast.makeText(this, "Permissions requises pour les notifications", Toast.LENGTH_LONG).show()
+            Log.w("MainActivity", "⚠️ Certaines permissions refusées")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !postNotificationsGranted) {
+                Toast.makeText(this, "⚠️ Permission POST_NOTIFICATIONS requise pour les notifications sur Android 13+", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this, "⚠️ Permissions requises pour les notifications", Toast.LENGTH_LONG).show()
+            }
+            // Initialiser quand même l'app en mode dégradé
+            initializeApp()
         }
     }
     
@@ -120,22 +139,34 @@ class MainActivity : AppCompatActivity() {
      * Vérifier les permissions
      */
     private fun checkPermissions() {
-        val permissions = arrayOf(
-            Manifest.permission.POST_NOTIFICATIONS,
+        val permissions = mutableListOf<String>()
+        
+        // Permission POST_NOTIFICATIONS requise pour Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+            Log.d("MainActivity", "📱 API 33+: Permission POST_NOTIFICATIONS requise")
+        } else {
+            Log.d("MainActivity", "📱 API < 33: Permission POST_NOTIFICATIONS non requise")
+        }
+        
+        // Autres permissions nécessaires
+        permissions.addAll(arrayOf(
             Manifest.permission.VIBRATE,
             Manifest.permission.WAKE_LOCK,
             Manifest.permission.FOREGROUND_SERVICE,
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE
-        )
+        ))
         
         val permissionsToRequest = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
         
         if (permissionsToRequest.isNotEmpty()) {
+            Log.d("MainActivity", "🔐 Permissions à demander: ${permissionsToRequest.joinToString(", ")}")
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
+            Log.d("MainActivity", "✅ Toutes les permissions sont accordées")
             initializeApp()
         }
     }
@@ -176,29 +207,74 @@ class MainActivity : AppCompatActivity() {
         notificationService = NotificationService(this)
         Log.d("MainActivity", "✅ NotificationService initialisé")
         
-        // Démarrer le service en arrière-plan
-        val serviceIntent = Intent(this, BackgroundService::class.java)
-        Log.d("MainActivity", "🚀 Démarrage du BackgroundService...")
-        startService(serviceIntent)
+        // Initialiser le service Socket.IO
+        socketIOService = SocketIOService()
+        Log.d("MainActivity", "✅ SocketIOService initialisé")
         
-        // Obtenir la référence au service lié
+        // Démarrer le service Socket.IO
+        val socketServiceIntent = Intent(this, SocketIOService::class.java)
+        Log.d("MainActivity", "🚀 Démarrage du SocketIOService...")
+        startService(socketServiceIntent)
+        
+        // Obtenir la référence au service Socket.IO lié
+        Log.d("MainActivity", "🔗 Liaison au SocketIOService...")
+        bindService(socketServiceIntent, socketServiceConnection, BIND_AUTO_CREATE)
+        
+        // Démarrer aussi le service en arrière-plan pour compatibilité
+        val backgroundServiceIntent = Intent(this, BackgroundService::class.java)
+        Log.d("MainActivity", "🚀 Démarrage du BackgroundService...")
+        startService(backgroundServiceIntent)
+        
+        // Obtenir la référence au service en arrière-plan lié
         Log.d("MainActivity", "🔗 Liaison au BackgroundService...")
-        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE)
+        bindService(backgroundServiceIntent, serviceConnection, BIND_AUTO_CREATE)
     }
     
     /**
-     * Connexion au service
+     * Connexion au service Socket.IO
+     */
+    private val socketServiceConnection = object : android.content.ServiceConnection {
+        override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
+            Log.d("MainActivity", "🔗 SocketServiceConnection.onServiceConnected appelé")
+            try {
+                val socketService = (service as SocketIOService.SocketIOBinder).getService()
+                Log.d("MainActivity", "✅ SocketIOService connecté avec succès")
+                
+                // Configurer les listeners
+                setupSocketIOListeners(socketService)
+                
+                // Lancer la connexion automatique
+                lifecycleScope.launch {
+                    launchSocketIOConnection(socketService)
+                }
+                
+                // Mettre à jour l'interface utilisateur
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "✅ Socket.IO connecté", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "❌ Erreur lors de la connexion au SocketIOService", e)
+            }
+        }
+        
+        override fun onServiceDisconnected(name: android.content.ComponentName?) {
+            Log.d("MainActivity", "❌ SocketIOService déconnecté")
+        }
+    }
+    
+    /**
+     * Connexion au service Background
      */
     private val serviceConnection = object : android.content.ServiceConnection {
         override fun onServiceConnected(name: android.content.ComponentName?, service: IBinder?) {
             Log.d("MainActivity", "🔗 ServiceConnection.onServiceConnected appelé")
             try {
                 backgroundService = (service as BackgroundService.BackgroundServiceBinder).getService()
-                Log.d("MainActivity", "✅ Service connecté avec succès")
+                Log.d("MainActivity", "✅ BackgroundService connecté avec succès")
                 
                 // Mettre à jour l'interface utilisateur maintenant que le service est connecté
                 runOnUiThread {
-                    Toast.makeText(this@MainActivity, "✅ Service connecté", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "✅ Service en arrière-plan connecté", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "❌ Erreur lors de la connexion au service", e)
@@ -207,7 +283,106 @@ class MainActivity : AppCompatActivity() {
         
         override fun onServiceDisconnected(name: android.content.ComponentName?) {
             backgroundService = null
-            Log.d("MainActivity", "❌ Service déconnecté")
+            Log.d("MainActivity", "❌ BackgroundService déconnecté")
+        }
+    }
+    
+    /**
+     * Configurer les listeners Socket.IO
+     */
+    private fun setupSocketIOListeners(socketService: SocketIOService) {
+        Log.d("MainActivity", "🔧 Configuration des listeners Socket.IO...")
+        
+        // Listener pour le statut de connexion
+        socketService.setOnConnectionStatusListener { isConnected ->
+            runOnUiThread {
+                connectionStatus = if (isConnected) "Connecté" else "Déconnecté"
+                Log.d("MainActivity", "📊 Statut Socket.IO: $connectionStatus")
+                updateConnectionStatus()
+            }
+        }
+        
+        // Listener pour les messages
+        socketService.setOnMessageListener { message ->
+            runOnUiThread {
+                Log.d("MainActivity", "📨 Message Socket.IO reçu: ${message.content}")
+                messages.add(0, message) // Ajouter au début de la liste
+                messageAdapter.notifyItemInserted(0)
+                binding.recyclerViewMessages.scrollToPosition(0)
+                
+                // Afficher un toast pour confirmer la réception
+                Toast.makeText(this@MainActivity, "📨 Message reçu: ${message.content}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        // Listener pour les erreurs
+        socketService.setOnErrorListener { error ->
+            runOnUiThread {
+                Log.e("MainActivity", "❌ Erreur Socket.IO: $error")
+                Toast.makeText(this@MainActivity, "❌ Erreur Socket.IO: $error", Toast.LENGTH_LONG).show()
+            }
+        }
+        
+        Log.d("MainActivity", "✅ Listeners Socket.IO configurés")
+    }
+    
+    /**
+     * Lancer la connexion Socket.IO automatique
+     */
+    private suspend fun launchSocketIOConnection(socketService: SocketIOService) {
+        try {
+            Log.d("MainActivity", "🚀 Lancement de la connexion Socket.IO automatique...")
+            
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "🔄 Connexion Socket.IO en cours...", Toast.LENGTH_SHORT).show()
+            }
+            
+            val connected = socketService.connect()
+            
+            runOnUiThread {
+                if (connected) {
+                    Log.d("MainActivity", "✅ Connexion Socket.IO réussie")
+                    Toast.makeText(this@MainActivity, "✅ Connexion Socket.IO réussie", Toast.LENGTH_SHORT).show()
+                    connectionStatus = "Connecté"
+                } else {
+                    Log.w("MainActivity", "⚠️ Échec de la connexion Socket.IO")
+                    Toast.makeText(this@MainActivity, "⚠️ Échec de la connexion Socket.IO", Toast.LENGTH_LONG).show()
+                    connectionStatus = "Déconnecté"
+                }
+                updateConnectionStatus()
+            }
+            
+        } catch (error: Exception) {
+            Log.e("MainActivity", "❌ Erreur lors de la connexion Socket.IO", error)
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "❌ Erreur Socket.IO: ${error.message}", Toast.LENGTH_LONG).show()
+                connectionStatus = "Erreur"
+                updateConnectionStatus()
+            }
+        }
+    }
+    
+    /**
+     * Mettre à jour l'affichage du statut de connexion
+     */
+    private fun updateConnectionStatus() {
+        binding.textConnectionStatus.text = "Statut: $connectionStatus"
+        
+        // Changer la couleur selon le statut
+        val color = when (connectionStatus) {
+            "Connecté" -> android.graphics.Color.GREEN
+            "Déconnecté" -> android.graphics.Color.RED
+            "Erreur" -> android.graphics.Color.parseColor("#FFA500") // Orange
+            "Arrêté" -> android.graphics.Color.parseColor("#FFA500") // Orange
+            else -> android.graphics.Color.GRAY
+        }
+        binding.textConnectionStatus.setTextColor(color)
+        
+        // Mettre à jour le texte du bouton si disponible
+        try {
+            binding.buttonToggleService.text = if (isServiceRunning) "🛑 Arrêter le service" else "▶️ Démarrer le service"
+        } catch (e: Exception) {
+            // Le bouton n'existe peut-être pas dans le layout
         }
     }
     
@@ -358,28 +533,49 @@ class MainActivity : AppCompatActivity() {
     }
     
     /**
-     * Mettre à jour le statut de connexion
+     * Reconnecter manuellement Socket.IO
      */
-    private fun updateConnectionStatus() {
-        val statusColor = when (connectionStatus) {
-            "Connecté" -> getColor(android.R.color.holo_green_dark)
-            "Déconnecté" -> getColor(android.R.color.holo_red_dark)
-            "Arrêté" -> getColor(android.R.color.holo_orange_dark)
-            else -> getColor(android.R.color.darker_gray)
+    private fun reconnectSocketIO() {
+        lifecycleScope.launch {
+            try {
+                Log.d("MainActivity", "🔄 Reconnexion manuelle Socket.IO...")
+                
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "🔄 Reconnexion Socket.IO...", Toast.LENGTH_SHORT).show()
+                }
+                
+                // Si le service Socket.IO est disponible, reconnecter
+                if (::socketIOService.isInitialized) {
+                    val connected = socketIOService.connect()
+                    
+                    runOnUiThread {
+                        if (connected) {
+                            Log.d("MainActivity", "✅ Reconnexion Socket.IO réussie")
+                            Toast.makeText(this@MainActivity, "✅ Reconnexion Socket.IO réussie", Toast.LENGTH_SHORT).show()
+                            connectionStatus = "Connecté"
+                        } else {
+                            Log.w("MainActivity", "⚠️ Échec de la reconnexion Socket.IO")
+                            Toast.makeText(this@MainActivity, "⚠️ Échec de la reconnexion Socket.IO", Toast.LENGTH_LONG).show()
+                            connectionStatus = "Déconnecté"
+                        }
+                        updateConnectionStatus()
+                    }
+                } else {
+                    Log.w("MainActivity", "⚠️ SocketIOService non initialisé")
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "⚠️ Service Socket.IO non disponible", Toast.LENGTH_LONG).show()
+                    }
+                }
+                
+            } catch (error: Exception) {
+                Log.e("MainActivity", "❌ Erreur lors de la reconnexion Socket.IO", error)
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "❌ Erreur reconnexion: ${error.message}", Toast.LENGTH_LONG).show()
+                    connectionStatus = "Erreur"
+                    updateConnectionStatus()
+                }
+            }
         }
-        
-        val statusIcon = when (connectionStatus) {
-            "Connecté" -> "🟢"
-            "Déconnecté" -> "🔴"
-            "Arrêté" -> "🟡"
-            else -> "⚪"
-        }
-        
-        binding.statusIndicator.setBackgroundColor(statusColor)
-        binding.textConnectionStatus.text = "$statusIcon $connectionStatus"
-        
-        // Mettre à jour le texte du bouton
-        binding.buttonToggleService.text = if (isServiceRunning) "🛑 Arrêter le service" else "▶️ Démarrer le service"
     }
     
     /**

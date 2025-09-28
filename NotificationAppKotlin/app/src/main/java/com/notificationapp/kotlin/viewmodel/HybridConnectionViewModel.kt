@@ -19,8 +19,8 @@ class HybridConnectionViewModel(application: Application) : AndroidViewModel(app
     private val webSocketService = WebSocketService()
     private val socketIOService = SocketIOService()
     
-    // Type de connexion actuel
-    private var currentConnectionType: ConnectionType = ConnectionType.WEBSOCKET
+    // Type de connexion actuel (Socket.IO par défaut car plus fiable)
+    private var currentConnectionType: ConnectionType = ConnectionType.SOCKETIO
     
     // LiveData pour l'état de connexion
     private val _connectionStatus = MutableLiveData<Boolean>()
@@ -159,24 +159,33 @@ class HybridConnectionViewModel(application: Application) : AndroidViewModel(app
     }
     
     /**
-     * Se connecter au serveur (essaie WebSocket puis Socket.IO si échec)
+     * Se connecter au serveur (essaie Socket.IO directement car plus fiable)
      */
     fun connect() {
         viewModelScope.launch {
             try {
-                _statusText.value = "Connexion WebSocket en cours..."
-                currentConnectionType = ConnectionType.WEBSOCKET
+                // Commencer directement par Socket.IO car plus fiable
+                _statusText.value = "Connexion Socket.IO en cours..."
+                currentConnectionType = ConnectionType.SOCKETIO
                 _connectionType.value = currentConnectionType
                 
-                val success = webSocketService.connect()
+                val success = socketIOService.connect()
                 
                 if (!success) {
-                    // Essayer Socket.IO si WebSocket échoue
-                    trySocketIOFallback()
+                    // Essayer WebSocket si Socket.IO échoue
+                    _statusText.value = "Tentative WebSocket..."
+                    currentConnectionType = ConnectionType.WEBSOCKET
+                    _connectionType.value = currentConnectionType
+                    
+                    val webSocketSuccess = webSocketService.connect()
+                    if (!webSocketSuccess) {
+                        _error.value = "Impossible de se connecter avec Socket.IO ou WebSocket"
+                        _statusText.value = "Erreur de connexion"
+                    }
                 }
             } catch (e: Exception) {
-                _error.value = "Erreur lors de la connexion WebSocket: ${e.message}"
-                trySocketIOFallback()
+                _error.value = "Erreur lors de la connexion: ${e.message}"
+                _statusText.value = "Erreur de connexion"
             }
         }
     }

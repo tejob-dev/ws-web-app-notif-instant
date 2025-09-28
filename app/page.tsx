@@ -16,7 +16,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isConnected, setIsConnected] = useState(false)
-  const apiUrl = "http://69.197.142.189:5022"//"http://localhost:5022"//process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+  const apiUrl = 'http://localhost:3001'//"http://69.197.142.189:5022"//"http://localhost:5022"//process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
   useEffect(() => {
 
     // Connexion WebSocket

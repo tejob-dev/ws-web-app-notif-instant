@@ -9,6 +9,9 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.content.pm.PackageManager
 import com.notificationapp.kotlin.MainActivity
 import com.notificationapp.kotlin.R
 import com.notificationapp.kotlin.config.AppConfig
@@ -72,10 +75,19 @@ class NotificationService(private val context: Context) {
         return try {
             Log.d(TAG, "🚀 Initialisation du service de notifications...")
             
-            // Créer une notification persistante
+            // Vérifier si les notifications sont activées
+            val notificationsEnabled = areNotificationsEnabled()
+            if (!notificationsEnabled) {
+                Log.w(TAG, "⚠️ Les notifications ne sont pas activées - initialisation en mode dégradé")
+                // Ne pas retourner false, continuer l'initialisation
+            } else {
+                Log.d(TAG, "✅ Permissions de notification accordées")
+            }
+            
+            // Créer une notification persistante (même si les permissions ne sont pas accordées)
             createPersistentNotification()
             
-            Log.d(TAG, "✅ Service de notifications initialisé avec succès")
+            Log.d(TAG, "✅ Service de notifications initialisé avec succès (notifications: $notificationsEnabled)")
             true
         } catch (error: Exception) {
             Log.e(TAG, "❌ Erreur lors de l'initialisation du service", error)
@@ -88,6 +100,12 @@ class NotificationService(private val context: Context) {
      */
     fun createPersistentNotification() {
         try {
+            // Vérifier les permissions avant de créer la notification
+            if (!areNotificationsEnabled()) {
+                Log.w(TAG, "⚠️ Permissions de notification non accordées - notification persistante ignorée")
+                return
+            }
+            
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
@@ -96,7 +114,11 @@ class NotificationService(private val context: Context) {
                 context,
                 0,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
             )
             
             val notification = NotificationCompat.Builder(context, AppConfig.Notifications.CHANNEL_ID)
@@ -111,9 +133,9 @@ class NotificationService(private val context: Context) {
                 .build()
             
             notificationManager.notify(AppConfig.Notifications.PERSISTENT_NOTIFICATION_ID, notification)
-            Log.d(TAG, "📌 Notification persistante créée")
+            Log.d(TAG, "📌 Notification persistante créée avec succès")
         } catch (error: Exception) {
-            Log.e(TAG, "Erreur lors de la création de la notification persistante", error)
+            Log.e(TAG, "❌ Erreur lors de la création de la notification persistante", error)
         }
     }
     
@@ -123,6 +145,14 @@ class NotificationService(private val context: Context) {
     fun showPopUpNotification(message: Message) {
         serviceScope.launch {
             try {
+                Log.d(TAG, "🔔 Tentative d'affichage de notification pour: ${message.content}")
+                
+                // Vérifier si les notifications sont activées
+                if (!areNotificationsEnabled()) {
+                    Log.w(TAG, "⚠️ Les notifications ne sont pas activées - impossible d'afficher la notification")
+                    return@launch
+                }
+                
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     putExtra("message_id", message.id)
@@ -133,7 +163,11 @@ class NotificationService(private val context: Context) {
                     context,
                     message.id.hashCode(),
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    } else {
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    }
                 )
                 
                 val notification = NotificationCompat.Builder(context, AppConfig.Notifications.CHANNEL_ID)
@@ -151,9 +185,9 @@ class NotificationService(private val context: Context) {
                 val notificationId = notificationIdCounter.getAndIncrement()
                 notificationManager.notify(notificationId, notification)
                 
-                Log.d(TAG, "📱 Notification pop-up affichée: ${message.content}")
+                Log.d(TAG, "📱 Notification pop-up affichée avec succès (ID: $notificationId): ${message.content}")
             } catch (error: Exception) {
-                Log.e(TAG, "Erreur lors de l'affichage de la notification pop-up", error)
+                Log.e(TAG, "❌ Erreur lors de l'affichage de la notification pop-up", error)
             }
         }
     }
@@ -164,14 +198,17 @@ class NotificationService(private val context: Context) {
     fun handleWebSocketMessage(message: Message) {
         serviceScope.launch {
             try {
+                Log.d(TAG, "📨 Traitement du message WebSocket: ${message.content}")
+                
                 // Afficher une notification pop-up
                 showPopUpNotification(message)
                 
                 // Sauvegarder le message localement
                 saveMessageLocally(message)
                 
+                Log.d(TAG, "✅ Message WebSocket traité avec succès")
             } catch (error: Exception) {
-                Log.e(TAG, "Erreur lors du traitement du message WebSocket", error)
+                Log.e(TAG, "❌ Erreur lors du traitement du message WebSocket", error)
             }
         }
     }
@@ -259,14 +296,65 @@ class NotificationService(private val context: Context) {
     }
     
     /**
-     * Vérifier si les notifications sont activées
+     * Vérifier si les notifications sont activées ET si la permission POST_NOTIFICATIONS est accordée (pour API 33+)
      */
     fun areNotificationsEnabled(): Boolean {
         return try {
-            notificationManager.areNotificationsEnabled()
+            // 1. Vérification générale de désactivation par l'utilisateur (pour toutes les versions)
+            val enabled = notificationManager.areNotificationsEnabled()
+            Log.d(TAG, "🔍 Vérification générale des notifications: $enabled")
+            
+            // 2. Vérification spécifique de la permission POST_NOTIFICATIONS (API 33+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // TIRAMISU est API 33
+                val permissionGranted = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+                
+                Log.d(TAG, "🔍 Vérification permission POST_NOTIFICATIONS (API 33+): $permissionGranted")
+                
+                if (!permissionGranted) {
+                    Log.w(TAG, "⚠️ Permission POST_NOTIFICATIONS requise et non accordée (API 33+)")
+                    Log.w(TAG, "💡 Solution: Demander la permission POST_NOTIFICATIONS dans l'activité")
+                    return false
+                }
+            } else {
+                Log.d(TAG, "📱 API < 33: Permission POST_NOTIFICATIONS non requise")
+            }
+            
+            if (!enabled) {
+                Log.w(TAG, "⚠️ Les notifications ne sont pas activées pour cette application")
+                Log.w(TAG, "💡 Solution: Aller dans Paramètres > Applications > NotificationApp > Notifications")
+            }
+            
+            // Retourne le statut combiné (général + permission API 33)
+            val finalStatus = enabled && (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || 
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+            
+            Log.d(TAG, "🔍 Statut final des notifications: $finalStatus")
+            finalStatus
+            
         } catch (error: Exception) {
-            Log.e(TAG, "Erreur lors de la vérification des permissions de notification", error)
+            Log.e(TAG, "❌ Erreur lors de la vérification des permissions de notification", error)
             false
+        }
+    }
+    
+    /**
+     * Vérifier spécifiquement la permission POST_NOTIFICATIONS (API 33+)
+     */
+    fun isPostNotificationsPermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            
+            Log.d(TAG, "🔍 Permission POST_NOTIFICATIONS (API 33+): $granted")
+            granted
+        } else {
+            Log.d(TAG, "📱 API < 33: Permission POST_NOTIFICATIONS non requise")
+            true // Pour les versions antérieures, considérer comme accordée
         }
     }
     
@@ -276,6 +364,8 @@ class NotificationService(private val context: Context) {
     fun getServiceStatus(): Map<String, Any> {
         return mapOf(
             "notificationsEnabled" to areNotificationsEnabled(),
+            "postNotificationsPermissionGranted" to isPostNotificationsPermissionGranted(),
+            "apiLevel" to Build.VERSION.SDK_INT,
             "channelCreated" to true,
             "persistentNotificationActive" to true
         )
