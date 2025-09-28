@@ -28,6 +28,14 @@ object AppConfig {
             "69.197.142.189:5022", // Production Socket.IO (fallback)
         )
         
+        // URLs Socket.IO spécifiques
+        val SOCKETIO_URLS = listOf(
+            "http://69.197.142.189:5022", // Production Socket.IO
+            "http://192.168.1.71:3001",   // Local Socket.IO
+            "http://10.0.2.2:3001",       // Émulateur Socket.IO
+            "http://localhost:3001",      // Développement local Socket.IO
+        )
+        
         // Timeout de connexion (augmenté pour la production)
         const val CONNECTION_TIMEOUT = 15000L
     }

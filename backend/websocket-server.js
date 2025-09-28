@@ -159,7 +159,7 @@ class NativeWebSocketServer {
     if (!this.db) return;
 
     this.db.run(
-      'INSERT INTO messages (id, content, type) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO messages (id, content, type) VALUES (?, ?, ?)',
       [message.id || uuidv4(), message.content, message.type || 'info'],
       function(err) {
         if (err) {

@@ -20,6 +20,8 @@ import com.notificationapp.kotlin.databinding.ActivityMainBinding
 import com.notificationapp.kotlin.model.*
 import com.notificationapp.kotlin.service.BackgroundService
 import com.notificationapp.kotlin.service.NotificationService
+import com.notificationapp.kotlin.service.SocketIOService
+import com.notificationapp.kotlin.service.WebSocketService
 import com.notificationapp.kotlin.utils.AndroidCompatibility
 import kotlinx.coroutines.launch
 
@@ -33,6 +35,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var messageAdapter: MessageAdapter
     private var backgroundService: BackgroundService? = null
     private lateinit var notificationService: NotificationService
+    private lateinit var socketIOService: SocketIOService
+    private lateinit var webSocketService: WebSocketService
     
     private var isServiceRunning = false
     private var connectionStatus = "Déconnecté"
@@ -66,6 +70,13 @@ class MainActivity : AppCompatActivity() {
      * Configurer l'interface utilisateur
      */
     private fun setupUI() {
+        // Initialiser les services
+        socketIOService = SocketIOService()
+        webSocketService = WebSocketService()
+        
+        // Configurer les callbacks Socket.IO
+        setupSocketIOCallbacks()
+        
         // Configurer la RecyclerView pour les messages
         messageAdapter = MessageAdapter(messages)
         binding.recyclerViewMessages.apply {
@@ -80,6 +91,23 @@ class MainActivity : AppCompatActivity() {
         
         binding.buttonClearMessages.setOnClickListener {
             clearMessages()
+        }
+        
+        // Boutons Socket.IO et WebSocket
+        binding.buttonConnectSocketIO.setOnClickListener {
+            connectSocketIO()
+        }
+        
+        binding.buttonConnectWebSocket.setOnClickListener {
+            connectWebSocket()
+        }
+        
+        binding.buttonSendTestMessage.setOnClickListener {
+            sendTestMessage()
+        }
+        
+        binding.buttonDisconnect.setOnClickListener {
+            disconnectAll()
         }
         
         // Masquer les informations au début
@@ -354,6 +382,138 @@ class MainActivity : AppCompatActivity() {
         binding.buttonToggleService.text = if (isServiceRunning) "🛑 Arrêter le service" else "▶️ Démarrer le service"
     }
     
+    /**
+     * Configurer les callbacks Socket.IO
+     */
+    private fun setupSocketIOCallbacks() {
+        socketIOService.setOnConnectionStatusListener { isConnected ->
+            runOnUiThread {
+                if (isConnected) {
+                    connectionStatus = "Socket.IO Connecté"
+                    updateConnectionStatus()
+                    Toast.makeText(this@MainActivity, "✅ Socket.IO connecté au port 5022", Toast.LENGTH_SHORT).show()
+                } else {
+                    connectionStatus = "Socket.IO Déconnecté"
+                    updateConnectionStatus()
+                }
+            }
+        }
+        
+        socketIOService.setOnMessageListener { message ->
+            runOnUiThread {
+                messages.add(0, message)
+                messageAdapter.notifyItemInserted(0)
+                binding.textMessagesCount.text = "📨 Messages reçus (${messages.size})"
+                Toast.makeText(this@MainActivity, "📨 Message Socket.IO reçu: ${message.content}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        socketIOService.setOnErrorListener { error ->
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, "❌ Erreur Socket.IO: $error", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    /**
+     * Se connecter avec Socket.IO
+     */
+    private fun connectSocketIO() {
+        lifecycleScope.launch {
+            try {
+                binding.progressBar.visibility = View.VISIBLE
+                connectionStatus = "Connexion Socket.IO..."
+                updateConnectionStatus()
+                
+                val success = socketIOService.connect()
+                
+                if (!success) {
+                    connectionStatus = "Échec Socket.IO"
+                    updateConnectionStatus()
+                    Toast.makeText(this@MainActivity, "❌ Impossible de se connecter avec Socket.IO", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                connectionStatus = "Erreur Socket.IO"
+                updateConnectionStatus()
+                Toast.makeText(this@MainActivity, "❌ Erreur Socket.IO: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
+            }
+        }
+    }
+    
+    /**
+     * Se connecter avec WebSocket
+     */
+    private fun connectWebSocket() {
+        lifecycleScope.launch {
+            try {
+                binding.progressBar.visibility = View.VISIBLE
+                connectionStatus = "Connexion WebSocket..."
+                updateConnectionStatus()
+                
+                val success = webSocketService.connect()
+                
+                if (success) {
+                    connectionStatus = "WebSocket Connecté"
+                    updateConnectionStatus()
+                    Toast.makeText(this@MainActivity, "✅ WebSocket connecté au port 5023", Toast.LENGTH_SHORT).show()
+                } else {
+                    connectionStatus = "Échec WebSocket"
+                    updateConnectionStatus()
+                    Toast.makeText(this@MainActivity, "❌ Impossible de se connecter avec WebSocket", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                connectionStatus = "Erreur WebSocket"
+                updateConnectionStatus()
+                Toast.makeText(this@MainActivity, "❌ Erreur WebSocket: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
+            }
+        }
+    }
+    
+    /**
+     * Envoyer un message de test
+     */
+    private fun sendTestMessage() {
+        lifecycleScope.launch {
+            try {
+                val testMessage = "Test message from Android - ${System.currentTimeMillis()}"
+                
+                // Essayer Socket.IO d'abord
+                if (socketIOService.getStatus().isConnected) {
+                    socketIOService.sendMessage(testMessage)
+                    Toast.makeText(this@MainActivity, "📤 Message envoyé via Socket.IO", Toast.LENGTH_SHORT).show()
+                } else if (webSocketService.getStatus().isConnected) {
+                    webSocketService.sendMessage(testMessage)
+                    Toast.makeText(this@MainActivity, "📤 Message envoyé via WebSocket", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "⚠️ Aucune connexion active", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "❌ Erreur envoi: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    /**
+     * Déconnecter tous les services
+     */
+    private fun disconnectAll() {
+        lifecycleScope.launch {
+            try {
+                socketIOService.disconnect()
+                webSocketService.disconnect()
+                connectionStatus = "Déconnecté"
+                updateConnectionStatus()
+                Toast.makeText(this@MainActivity, "🔌 Toutes les connexions fermées", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "❌ Erreur déconnexion: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
     override fun onResume() {
         super.onResume()
         // Mettre à jour le statut de connexion quand l'app revient au premier plan
@@ -367,6 +527,14 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 backgroundService?.stop()
             }
+        }
+        
+        // Déconnecter Socket.IO et WebSocket
+        try {
+            socketIOService.disconnect()
+            webSocketService.disconnect()
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Erreur lors de la déconnexion", e)
         }
     }
 }

@@ -1,260 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#f5f5f5"
-    android:padding="20dp">
+    android:padding="16dp"
+    tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- En-tête -->
-        <LinearLayout
+        <!-- Titre -->
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:text="NotificationApp Kotlin"
+            android:textSize="24sp"
+            android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginBottom="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔔 NotificationApp"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Service de notifications en temps réel"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:gravity="center" />
-
-        </LinearLayout>
+            android:layout_marginBottom="16dp" />
 
         <!-- Statut de connexion -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/status_container_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="16dp">
 
             <View
-                android:id="@+id/status_indicator"
-                android:layout_width="12dp"
-                android:layout_height="12dp"
-                android:background="@drawable/status_indicator_background"
-                android:layout_marginEnd="10dp" />
+                android:id="@+id/statusIndicator"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:background="@android:color/holo_red_light" />
 
             <TextView
-                android:id="@+id/text_connection_status"
-                android:layout_width="wrap_content"
+                android:id="@+id/textConnectionStatus"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="🔴 Déconnecté"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333" />
-
-        </LinearLayout>
-
-        <!-- Informations de compatibilité -->
-        <LinearLayout
-            android:id="@+id/layout_compatibility"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/info_container_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📱 Compatibilité Android"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:id="@+id/text_compatibility_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Appareil compatible"
-                android:textSize="14sp"
-                android:textColor="#4CAF50"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_os_version"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Version Android: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_model_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Modèle: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_brand"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Marque: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:id="@+id/text_features_available"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Fonctionnalités disponibles:"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="5dp" />
-
-        </LinearLayout>
-
-        <!-- Tests de fonctionnalités -->
-        <LinearLayout
-            android:id="@+id/layout_feature_tests"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/info_container_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🧪 Tests de fonctionnalités"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:id="@+id/text_websocket_test"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="WebSocket: ❌"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_notifications_test"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Notifications: ❌"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_background_task_test"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tâches arrière-plan: ❌"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_persistent_notification_test"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Notification persistante: ❌"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_local_storage_test"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Stockage local: ❌"
-                android:textSize="14sp"
-                android:textColor="#666666" />
-
-        </LinearLayout>
-
-        <!-- Informations de l'appareil -->
-        <LinearLayout
-            android:id="@+id/layout_device_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/info_container_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📱 Informations de l'appareil"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:id="@+id/text_platform"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Plateforme: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_service_active"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Service actif: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_polling_active"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Polling local: "
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="5dp" />
-
-            <TextView
-                android:id="@+id/text_device_id"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="ID Appareil: "
-                android:textSize="14sp"
-                android:textColor="#666666" />
+                android:layout_weight="1"
+                android:text="Déconnecté"
+                android:textSize="16sp" />
 
         </LinearLayout>
 
@@ -263,95 +51,279 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="20dp">
+            android:layout_marginBottom="8dp">
 
             <Button
-                android:id="@+id/button_toggle_service"
+                android:id="@+id/buttonToggleService"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="5dp"
-                android:text="▶️ Démarrer le service"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:background="@drawable/button_start_background" />
+                android:text="Démarrer Service"
+                android:layout_marginEnd="4dp" />
 
             <Button
-                android:id="@+id/button_clear_messages"
+                android:id="@+id/buttonClearMessages"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:text="🗑️ Effacer les messages"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
+                android:text="Effacer Messages"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Boutons Socket.IO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/buttonConnectSocketIO"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Connecter Socket.IO"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@android:color/holo_blue_light" />
+
+            <Button
+                android:id="@+id/buttonConnectWebSocket"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Connecter WebSocket"
+                android:layout_marginStart="4dp"
+                android:backgroundTint="@android:color/holo_green_light" />
+
+        </LinearLayout>
+
+        <!-- Boutons de test -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/buttonSendTestMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Envoyer Test"
+                android:layout_marginEnd="4dp"
+                android:backgroundTint="@android:color/holo_orange_light" />
+
+            <Button
+                android:id="@+id/buttonDisconnect"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Déconnecter"
+                android:layout_marginStart="4dp"
+                android:backgroundTint="@android:color/holo_red_light" />
+
+        </LinearLayout>
+
+        <!-- Informations de compatibilité -->
+        <LinearLayout
+            android:id="@+id/layoutCompatibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Compatibilité"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:background="@drawable/button_clear_background" />
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/textCompatibilityStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vérification en cours..."
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/textOsVersion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="OS: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textModelName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Modèle: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textBrand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Marque: "
+                android:textSize="12sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/textFeaturesAvailable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Fonctionnalités disponibles: "
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Tests de fonctionnalités -->
+        <LinearLayout
+            android:id="@+id/layoutFeatureTests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tests de Fonctionnalités"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/textWebsocketTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="WebSocket: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textNotificationsTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Notifications: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textBackgroundTaskTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tâches en arrière-plan: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textPersistentNotificationTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Notification persistante: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textLocalStorageTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stockage local: "
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Informations de l'appareil -->
+        <LinearLayout
+            android:id="@+id/layoutDeviceInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Informations de l'Appareil"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/textPlatform"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Plateforme: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textServiceActive"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Service actif: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textPollingActive"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Polling actif: "
+                android:textSize="12sp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/textDeviceId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ID Appareil: "
+                android:textSize="12sp" />
 
         </LinearLayout>
 
         <!-- Messages -->
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/info_container_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp">
+            android:text="Messages Reçus"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:id="@+id/text_messages_count"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="📨 Messages reçus (0)"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#333333"
-                android:layout_marginBottom="15dp" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_messages"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scrollbars="vertical" />
-
-        </LinearLayout>
-
-        <!-- Instructions -->
-        <LinearLayout
+        <TextView
+            android:id="@+id/textMessagesCount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/instructions_background"
-            android:padding="15dp"
-            android:layout_marginBottom="20dp">
+            android:text="Aucun message"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ℹ️ Instructions"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#1976d2"
-                android:layout_marginBottom="10dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="• Le service fonctionne en arrière-plan\n• Les notifications apparaissent même quand l'app est fermée\n• Compatible Android 6+\n• Une notification persistante reste dans la barre d'état"
-                android:textSize="14sp"
-                android:textColor="#1976d2"
-                android:lineSpacingMultiplier="1.2" />
-
-        </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewMessages"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@android:color/black"
+            android:padding="8dp" />
 
         <!-- Progress Bar -->
         <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
             android:visibility="gone" />
 
     </LinearLayout>

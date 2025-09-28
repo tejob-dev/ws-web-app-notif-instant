@@ -98,115 +98,114 @@ class WebSocketService : Service() {
      * Se connecter au serveur WebSocket (approche simplifiée basée sur le projet de référence)
      */
     suspend fun connect(): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                Log.d(TAG, "🔗 Tentative de connexion WebSocket...")
-                
-                // URLs à essayer (basé sur le projet de référence)
-                val urlsToTry = listOf(
-                    "ws://192.168.1.71:3002",
-                    "ws://10.0.2.2:3002", 
-                    "ws://localhost:3002",
-                    "ws://127.0.0.1:3002",
-                    "ws://69.197.142.189:3002"
-                )
-                
-                Log.d(TAG, "🔗 URLs WebSocket à essayer: $urlsToTry")
-                
-                for (url in urlsToTry) {
-                    try {
-                        Log.d(TAG, "🔗 Tentative de connexion WebSocket: $url")
-                        
-                        val success = connectToUrlDirect(url)
-                        if (success) {
-                            Log.d(TAG, "✅ Connexion WebSocket réussie: $url")
-                            reconnectAttempts = 0
-                            return@withContext true
-                        }
-                    } catch (error: Exception) {
-                        Log.w(TAG, "❌ Échec de connexion à $url: ${error.message}")
-                        continue
+        // Exécuter la logique dans la coroutine actuelle (qui devrait être Dispatchers.IO ou Main)
+        // Le travail réseau se fait sur le thread d'OkHttp et 'deferred.await()' suspend la coroutine actuelle.
+        try {
+            Log.d(TAG, "🔗 Tentative de connexion WebSocket...")
+            
+            val urlsToTry = listOf(
+                "ws://69.197.142.189:5023"
+            )
+            
+            Log.d(TAG, "🔗 URLs WebSocket à essayer: $urlsToTry")
+            
+            for (url in urlsToTry) {
+                try {
+                    Log.d(TAG, "🔗 Tentative de connexion WebSocket: $url")
+                    
+                    // La coroutine s'arrête ici jusqu'à ce que onOpen ou onFailure soit appelé
+                    val success = connectToUrlDirect(url) 
+                    
+                    if (success) {
+                        Log.d(TAG, "✅ Connexion WebSocket réussie: $url")
+                        reconnectAttempts = 0
+                        return true
                     }
+                } catch (error: Exception) {
+                    Log.w(TAG, "❌ Échec de connexion à $url: ${error.message}")
+                    continue
                 }
-                
-                Log.e(TAG, "❌ Impossible de se connecter à aucun serveur WebSocket")
-                false
-                
-            } catch (error: Exception) {
-                Log.e(TAG, "❌ Erreur lors de la connexion WebSocket", error)
-                false
             }
+            
+            Log.e(TAG, "❌ Impossible de se connecter à aucun serveur WebSocket")
+            return false
+            
+        } catch (error: Exception) {
+            Log.e(TAG, "❌ Erreur lors de la connexion WebSocket", error)
+            return false
         }
     }
     
     /**
-     * Connexion directe à une URL WebSocket (basé sur le projet de référence)
+     * Connexion directe à une URL WebSocket, attend la réponse asynchrone.
      */
     private suspend fun connectToUrlDirect(url: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = Request.Builder()
-                    .url(url)
-                    .build()
+        // Crée un objet pour signaler la réussite ou l'échec de l'opération
+        val deferred = CompletableDeferred<Boolean>()
+
+        // Assurez-vous d'avoir bien un client
+        val client = okHttpClient ?: return false
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d(TAG, "✅ WebSocket ouvert avec succès vers $url")
+                isConnected.set(true)
+                setupEventHandlers()
+                notifyConnectionStatus(true)
+                connectionStatusListener?.invoke(true)
                 
-                var connectionEstablished = false
-                
-                webSocket = okHttpClient?.newWebSocket(request, object : WebSocketListener() {
-                    override fun onOpen(webSocket: WebSocket, response: Response) {
-                        Log.d(TAG, "✅ WebSocket ouvert avec succès vers $url")
-                        isConnected.set(true)
-                        connectionEstablished = true
-                        setupEventHandlers()
-                        notifyConnectionStatus(true)
-                        
-                        // Notifier le ViewModel
-                        connectionStatusListener?.invoke(true)
-                    }
-                    
-                    override fun onMessage(webSocket: WebSocket, text: String) {
-                        Log.d(TAG, "📨 Message WebSocket reçu: $text")
-                        handleMessage(text)
-                    }
-                    
-                    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                        Log.d(TAG, "🔌 WebSocket fermé vers $url: code=$code, reason=$reason")
-                        isConnected.set(false)
-                        notifyConnectionStatus(false)
-                        
-                        // Notifier le ViewModel
-                        connectionStatusListener?.invoke(false)
-                    }
-                    
-                    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                        Log.d(TAG, "🔌 WebSocket fermé définitivement vers $url: code=$code, reason=$reason")
-                        isConnected.set(false)
-                        notifyConnectionStatus(false)
-                        
-                        // Notifier le ViewModel
-                        connectionStatusListener?.invoke(false)
-                    }
-                    
-                    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                        Log.e(TAG, "❌ Échec WebSocket vers $url: ${t.message}")
-                        isConnected.set(false)
-                        notifyConnectionStatus(false)
-                        
-                        // Notifier le ViewModel
-                        connectionStatusListener?.invoke(false)
-                        errorListener?.invoke("Erreur de connexion: ${t.message}")
-                    }
-                })
-                
-                // Attendre un peu pour voir si la connexion s'établit
-                delay(3000)
-                
-                connectionEstablished
-                
-            } catch (error: Exception) {
-                Log.e(TAG, "❌ Erreur lors de la connexion à $url", error)
-                false
+                // Signale la réussite de l'opération
+                if (!deferred.isCompleted) {
+                    deferred.complete(true)
+                }
             }
-        }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e(TAG, "❌ Échec WebSocket vers $url: ${t.message}")
+                isConnected.set(false)
+                notifyConnectionStatus(false)
+                connectionStatusListener?.invoke(false)
+                errorListener?.invoke("Erreur de connexion: ${t.message}")
+                
+                // Signale l'échec de l'opération
+                if (!deferred.isCompleted) {
+                    deferred.complete(false)
+                }
+            }
+            
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d(TAG, "📨 Message WebSocket reçu: $text")
+                handleMessage(text)
+            }
+            
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d(TAG, "🔌 WebSocket fermé vers $url: code=$code, reason=$reason")
+                isConnected.set(false)
+                notifyConnectionStatus(false)
+                
+                // Notifier le ViewModel
+                connectionStatusListener?.invoke(false)
+            }
+            
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                Log.d(TAG, "🔌 WebSocket fermé définitivement vers $url: code=$code, reason=$reason")
+                isConnected.set(false)
+                notifyConnectionStatus(false)
+                
+                // Notifier le ViewModel
+                connectionStatusListener?.invoke(false)
+            }
+        })
+
+        // Utilisez withTimeoutOrNull pour attendre le résultat avec un délai maximum
+        return withTimeoutOrNull(AppConfig.Network.CONNECTION_TIMEOUT.toLong()) {
+            deferred.await()
+        } ?: false // Retourne false si le délai est dépassé (Timeout)
     }
     
     /**

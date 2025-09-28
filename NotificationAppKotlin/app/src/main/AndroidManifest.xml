@@ -50,6 +50,13 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
+        <!-- Service Socket.IO en arrière-plan -->
+        <service
+            android:name=".service.SocketIOService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
         <!-- Service principal en arrière-plan -->
         <service
             android:name=".service.BackgroundService"
